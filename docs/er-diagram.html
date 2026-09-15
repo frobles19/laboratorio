@@ -1,0 +1,163 @@
+<title>Radioayudas - Diagrama ER</title>
+<style>
+  body { background: #0b0d12; }
+  h1 { font-size: 15px; font-weight: 600; color: #e6e8eb; margin: 0 0 4px; }
+  p.sub { color: #9aa1ac; font-size: 12px; margin: 0 0 16px; }
+  .wrap { overflow-x: auto; padding-bottom: 8px; }
+</style>
+<h1>Sistema de Trazabilidad de Radioayudas — Modelo de Datos v1</h1>
+<p class="sub">Diagrama ER derivado de schema.sql. FK no siempre mostradas por claridad (ej: created_by, audit_log) — ver SQL para el detalle completo.</p>
+<div class="wrap">
+<pre class="mermaid">
+erDiagram
+    TECHNICIANS ||--o| APP_USERS : "puede tener"
+    TECHNICIANS }o--o{ COMMISSION_TECHNICIANS : asignado
+    AIRPORTS ||--o{ INSTALLED_EQUIPMENT : aloja
+    AIRPORTS ||--o{ COMMISSION_AIRPORTS : destino
+    MODEL_CATALOG ||--o{ INSTALLED_EQUIPMENT : instancia
+    MODEL_CATALOG ||--o{ SPARE_PARTS : aplica_a
+    INSTALLED_EQUIPMENT ||--o{ INSTALLED_EQUIPMENT : "padre (ILS) / hijo (DME)"
+    INSTALLED_EQUIPMENT ||--|| TRANSMITTERS : "TX1"
+    INSTALLED_EQUIPMENT ||--|| TRANSMITTERS : "TX2"
+    INSTALLED_EQUIPMENT ||--o{ STATUS_HISTORY : historial
+    TRANSMITTERS ||--o{ STATUS_HISTORY : historial
+    INSTALLED_EQUIPMENT ||--o{ MAINTENANCES : mantenimientos
+    INSTALLED_EQUIPMENT ||--o{ TICKETS : tickets
+    INSTALLED_EQUIPMENT ||--o{ COMMISSION_EQUIPMENT : intervenido_en
+
+    ARTICLES ||--o| TOOLS : subclase
+    ARTICLES ||--o| SPARE_PARTS : subclase
+    ARTICLES ||--o{ MOVEMENTS : mueve
+    TOOLS ||--o{ COMMISSION_TOOL_CHECKLIST : checklist_cierre
+
+    VEHICLES ||--o{ COMMISSIONS : asignado_a
+    COMMISSIONS ||--o{ COMMISSION_TECHNICIANS : cuadrilla
+    COMMISSIONS ||--o{ COMMISSION_AIRPORTS : destinos
+    COMMISSIONS ||--o{ COMMISSION_EQUIPMENT : "equipos intervenidos"
+    COMMISSIONS ||--o{ COMMISSION_TOOL_CHECKLIST : checklist
+    COMMISSIONS ||--o{ MOVEMENTS : "movimientos (opcional)"
+    COMMISSIONS ||--o{ STATUS_HISTORY : "contexto (opcional)"
+    COMMISSIONS ||--o{ MAINTENANCES : "contexto (opcional)"
+    COMMISSIONS ||--o{ TICKETS : "contexto (opcional)"
+
+    TECHNICIANS {
+        uuid id PK
+        text full_name
+        text dni UK
+        text email UK
+    }
+    APP_USERS {
+        uuid id PK
+        app_role role
+        uuid technician_id FK
+    }
+    AIRPORTS {
+        char3 iata_code PK
+        text name
+        text region
+    }
+    MODEL_CATALOG {
+        uuid id PK
+        text brand
+        text model
+        equipment_type type
+        int aerial_verification_frequency_months
+    }
+    INSTALLED_EQUIPMENT {
+        uuid id PK
+        uuid catalog_model_id FK
+        char3 airport_iata FK
+        uuid parent_equipment_id FK
+        operational_status current_status "derivado de TX"
+    }
+    TRANSMITTERS {
+        uuid id PK
+        uuid equipment_id FK
+        tx_label label "TX1/TX2"
+        operational_status status
+    }
+    STATUS_HISTORY {
+        uuid id PK
+        status_entity_type entity_type
+        uuid equipment_id FK
+        uuid transmitter_id FK
+        operational_status previous_status
+        operational_status new_status
+        uuid changed_by FK
+        uuid commission_id FK
+        bool manual_edit
+    }
+    ARTICLES {
+        text asset_number PK
+        text serial_number
+        article_kind kind
+        location_type current_location_type
+        char3 current_location_airport FK
+        article_physical_status physical_status
+    }
+    TOOLS {
+        text asset_number PK_FK
+        text tool_type
+        date calibration_due_date
+    }
+    SPARE_PARTS {
+        text asset_number PK_FK
+        text spare_type
+        uuid catalog_model_id FK
+    }
+    MOVEMENTS {
+        uuid id PK
+        text asset_number FK
+        location_type origin_type
+        location_type destination_type
+        uuid commission_id FK "opcional"
+    }
+    VEHICLES {
+        uuid id PK
+        text license_plate UK
+    }
+    COMMISSIONS {
+        uuid id PK
+        commission_status status
+        date planned_departure_date
+        date planned_arrival_date
+        date actual_arrival_date
+        uuid vehicle_id FK
+    }
+    COMMISSION_TECHNICIANS {
+        uuid commission_id PK_FK
+        uuid technician_id PK_FK
+    }
+    COMMISSION_AIRPORTS {
+        uuid commission_id PK_FK
+        char3 airport_iata PK_FK
+    }
+    COMMISSION_EQUIPMENT {
+        uuid id PK
+        uuid commission_id FK
+        uuid equipment_id FK
+        bool intervened
+        maintenance_type maintenance_type
+    }
+    COMMISSION_TOOL_CHECKLIST {
+        uuid commission_id PK_FK
+        text asset_number PK_FK
+        tool_return_state return_state "pendiente/devuelta/no_devuelta"
+    }
+    MAINTENANCES {
+        uuid id PK
+        uuid equipment_id FK
+        maintenance_type type
+        date performed_at
+        date next_due_date
+        uuid commission_id FK "opcional"
+    }
+    TICKETS {
+        uuid id PK
+        uuid equipment_id FK
+        uuid transmitter_id FK
+        ticket_status status
+        uuid commission_id FK "opcional"
+    }
+</pre>
+</div>
