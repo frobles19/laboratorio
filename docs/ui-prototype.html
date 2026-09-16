@@ -1,0 +1,2174 @@
+<meta charset="utf-8">
+<title>Radioayudas Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0d1216;
+    --surface:#141b20;
+    --surface-2:#1b242a;
+    --surface-3:#212b32;
+    --border:#263139;
+    --border-soft:#1c262c;
+    --text:#e6edf0;
+    --text-dim:#8fa0a8;
+    --text-faint:#5c6c74;
+    --accent:#4fb8e0;
+    --accent-dim:rgba(79,184,224,.14);
+    --accent-text:#bfe8f7;
+    --ok:#4caf6a;
+    --ok-dim:rgba(76,175,106,.14);
+    --warn:#e0a83e;
+    --warn-dim:rgba(224,168,62,.14);
+    --crit:#e05a4e;
+    --crit-dim:rgba(224,90,78,.14);
+    --neutral-chip:#3a4750;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f4f6f7;
+      --surface:#ffffff;
+      --surface-2:#eef1f2;
+      --surface-3:#e4e9eb;
+      --border:#d7dee1;
+      --border-soft:#e4e9eb;
+      --text:#151c20;
+      --text-dim:#5c6c74;
+      --text-faint:#8a979d;
+      --accent:#1783a8;
+      --accent-dim:rgba(23,131,168,.10);
+      --accent-text:#0e5c76;
+      --ok:#2f8a52;
+      --ok-dim:rgba(47,138,82,.10);
+      --warn:#a5730f;
+      --warn-dim:rgba(165,115,15,.10);
+      --crit:#c23f34;
+      --crit-dim:rgba(194,63,52,.10);
+      --neutral-chip:#d7dee1;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1216; --surface:#141b20; --surface-2:#1b242a; --surface-3:#212b32;
+    --border:#263139; --border-soft:#1c262c; --text:#e6edf0; --text-dim:#8fa0a8;
+    --text-faint:#5c6c74; --accent:#4fb8e0; --accent-dim:rgba(79,184,224,.14);
+    --accent-text:#bfe8f7; --ok:#4caf6a; --ok-dim:rgba(76,175,106,.14);
+    --warn:#e0a83e; --warn-dim:rgba(224,168,62,.14); --crit:#e05a4e;
+    --crit-dim:rgba(224,90,78,.14); --neutral-chip:#3a4750;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Work Sans",system-ui,sans-serif;
+    font-size:14.5px; line-height:1.5; font-weight:500;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+  h1,h2,h3{font-family:"Big Shoulders Display","Work Sans",sans-serif; text-wrap:balance; letter-spacing:.01em; margin:0;}
+  a{color:var(--accent);}
+  button{font-family:inherit; font-size:inherit;}
+  ::selection{background:var(--accent-dim);}
+
+  .shell{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .rail{
+    width:216px; flex:none; background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:20px 0;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{padding:0 20px 18px; border-bottom:1px solid var(--border-soft); margin-bottom:10px;}
+  .brand-mark{
+    font-family:"Big Shoulders Display"; font-weight:700; font-size:22px; letter-spacing:.02em;
+    color:var(--text); line-height:1;
+  }
+  .brand-mark span{color:var(--accent);}
+  .brand-sub{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.09em; margin-top:4px;}
+
+  .nav-group{padding:14px 12px 4px;}
+  .nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--text-faint); padding:0 8px 6px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:6px;
+    color:var(--text-dim); cursor:pointer; font-size:13px; font-weight:500; user-select:none;
+    border:1px solid transparent;
+  }
+  .nav-item:hover{background:var(--surface-2); color:var(--text);}
+  .nav-item.active{background:var(--accent-dim); color:var(--accent-text); border-color:rgba(79,184,224,.3);}
+  .nav-ico{width:16px; height:16px; flex:none; opacity:.9;}
+  .nav-item.locked{opacity:.4; cursor:not-allowed;}
+  .nav-item.locked:hover{background:none; color:var(--text-dim);}
+
+  .rail-foot{margin-top:auto; padding:14px 20px 0; border-top:1px solid var(--border-soft);}
+
+  /* ---------- Topbar ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:14px 28px; border-bottom:1px solid var(--border); background:var(--bg);
+    position:sticky; top:0; z-index:5;
+  }
+  .crumbs{font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px;}
+  .page-title{font-size:24px; font-weight:600;}
+  .role-switch{display:flex; align-items:center; gap:8px;}
+  .role-switch label{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em;}
+  select{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:7px 10px; font-size:13px; font-weight:500;
+  }
+  .role-note{font-size:11.5px; color:var(--text-faint); max-width:230px; line-height:1.4;}
+
+  .content{padding:24px 28px 60px; flex:1;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* ---------- Generic building blocks ---------- */
+  .grid{display:grid; gap:14px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:2fr 1fr;}
+  @media (max-width:980px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
+  }
+  .card-title{font-size:13px; font-weight:600; color:var(--text); margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;}
+  .card-title small{font-size:11px; font-weight:400; color:var(--text-faint); text-transform:none;}
+
+  .stat{padding:16px 18px;}
+  .stat-label{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); margin-bottom:8px;}
+  .stat-value{font-family:"Big Shoulders Display"; font-size:34px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
+  .stat-value.ok{color:var(--ok);} .stat-value.warn{color:var(--warn);} .stat-value.crit{color:var(--crit);}
+  .stat-delta{font-size:11.5px; color:var(--text-faint); margin-top:6px;}
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 7px; border-radius:99px;
+    font-size:11.5px; font-weight:500; white-space:nowrap;
+  }
+  .dot{width:7px; height:7px; border-radius:50%; flex:none;}
+  .pill.ok{background:var(--ok-dim); color:var(--ok);} .pill.ok .dot{background:var(--ok);}
+  .pill.warn{background:var(--warn-dim); color:var(--warn);} .pill.warn .dot{background:var(--warn);}
+  .pill.crit{background:var(--crit-dim); color:var(--crit);} .pill.crit .dot{background:var(--crit);}
+  .pill.neutral{background:var(--surface-3); color:var(--text-dim);} .pill.neutral .dot{background:var(--text-faint);}
+  .pill.accent{background:var(--accent-dim); color:var(--accent-text);} .pill.accent .dot{background:var(--accent);}
+
+  table{width:100%; border-collapse:collapse;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
+    padding:0 10px 8px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  td{padding:10px 10px; border-bottom:1px solid var(--border-soft); font-size:13px; vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.clickable:hover{background:var(--surface-2); cursor:pointer;}
+  .table-wrap{overflow-x:auto;}
+  .num{text-align:right; font-family:"IBM Plex Mono"; font-variant-numeric:tabular-nums;}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:6px; border-radius:7px; padding:8px 14px;
+    font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text);
+  }
+  .btn:hover{background:var(--surface-3);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#04222c;}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.ghost{background:transparent;}
+  .btn.small{padding:5px 10px; font-size:12px;}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap;}
+
+  .breadcrumb-link{color:var(--accent); cursor:pointer; font-weight:500;}
+  .back-link{display:inline-flex; align-items:center; gap:6px; color:var(--text-dim); font-size:12.5px; cursor:pointer; margin-bottom:14px;}
+  .back-link:hover{color:var(--text);}
+
+  .kv{display:flex; flex-direction:column; gap:2px;}
+  .kv .k{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);}
+  .kv .v{font-size:13.5px; font-weight:500;}
+
+  .divider{height:1px; background:var(--border-soft); margin:16px 0;}
+
+  .empty{color:var(--text-faint); font-size:12.5px; padding:18px 0; text-align:center;}
+
+  .lock-banner{
+    display:flex; align-items:center; gap:8px; background:var(--warn-dim); color:var(--warn);
+    border:1px solid rgba(224,168,62,.3); border-radius:8px; padding:8px 12px; font-size:12.5px; margin-bottom:16px;
+  }
+
+  /* Tabs */
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px;}
+  .tab{
+    padding:9px 4px; margin-right:18px; font-size:13px; font-weight:500; color:var(--text-faint);
+    cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;
+  }
+  .tab.active{color:var(--text); border-color:var(--accent);}
+
+  /* Wizard */
+  .steps{display:flex; align-items:center; gap:0; margin-bottom:22px;}
+  .step{display:flex; align-items:center; gap:10px; flex:1;}
+  .step-num{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:600; background:var(--surface-3); color:var(--text-faint); flex:none;
+    border:1px solid var(--border);
+  }
+  .step.done .step-num{background:var(--ok-dim); color:var(--ok); border-color:transparent;}
+  .step.current .step-num{background:var(--accent); color:#04222c; border-color:transparent;}
+  .step-label{font-size:12.5px; color:var(--text-faint); font-weight:500;}
+  .step.current .step-label{color:var(--text);}
+  .step-line{flex:1; height:1px; background:var(--border); margin:0 4px;}
+
+  .wizard-panel{min-height:280px;}
+  .wstep{display:none;}
+  .wstep.active{display:block;}
+
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-width:320px;}
+  .field label{font-size:11.5px; color:var(--text-dim); font-weight:500;}
+  .field input, .field select, .field textarea{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px 10px; font-size:13px; font-family:inherit;
+  }
+
+  .checklist-row{
+    display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--border-soft);
+  }
+  .checklist-row:last-child{border-bottom:none;}
+  .cr-main{flex:1; min-width:0;}
+  .cr-title{font-size:13.5px; font-weight:500;}
+  .cr-sub{font-size:11.5px; color:var(--text-faint); margin-top:1px;}
+  .seg{display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden;}
+  .seg button{
+    background:var(--surface-2); color:var(--text-dim); border:none; padding:6px 12px; font-size:12px; font-weight:600;
+    cursor:pointer; border-right:1px solid var(--border);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.sel-yes.on{background:var(--ok-dim); color:var(--ok);}
+  .seg button.sel-no.on{background:var(--crit-dim); color:var(--crit);}
+  .seg button.sel-pending.on{background:var(--warn-dim); color:var(--warn);}
+
+  .summary-box{background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:14px;}
+  .summary-line{display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid var(--border-soft);}
+  .summary-line:last-child{border-bottom:none;}
+  .warn-box{background:var(--warn-dim); border:1px solid rgba(224,168,62,.35); color:var(--warn); border-radius:8px; padding:12px 14px; font-size:12.5px; margin-bottom:14px;}
+
+  .avatar{
+    width:24px; height:24px; border-radius:50%; background:var(--surface-3); color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:600; flex:none;
+  }
+  .stack{display:flex; align-items:center; gap:-6px;}
+  .name-cell{display:flex; align-items:center; gap:8px;}
+  .name-list-row{
+    display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft);
+    cursor:pointer;
+  }
+  .name-list-row:last-child{border-bottom:none;}
+  .name-list-row:hover .name-list-title{color:var(--accent);}
+  .name-list-title{font-size:13.5px; font-weight:500;}
+  .name-list-sub{font-size:11.5px; color:var(--text-faint);}
+  .name-list-arrow{margin-left:auto; color:var(--text-faint);}
+
+  /* status pill fixed-width variant for tables */
+  .pill-status{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    width:118px; padding:4px 6px; border-radius:99px; font-size:11.5px; font-weight:500;
+  }
+
+  /* status pill, high-impact solid variant for the commissions list */
+  .pill-status-strong{
+    display:flex; align-items:center; justify-content:center;
+    width:112px; padding:5px 6px; border-radius:6px; font-size:11.5px; font-weight:700;
+    letter-spacing:.02em; color:#fff;
+  }
+  /* estado: gama fría azul → verde (progresión del ciclo de vida de la comisión) */
+  .pill-status-strong.planificada{background:#3f7f8c;}
+  .pill-status-strong.encurso{background:#1f8fc4;}
+  .pill-status-strong.finalizada{background:#2f8a52;}
+  .pill-status-strong.cancelada{background:#c23f34;}
+
+  /* task-type pills: gama violeta/magenta — deliberadamente distinta de la de estado */
+  .pill-task{
+    display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px;
+    font-size:11px; font-weight:600; color:#fff; white-space:nowrap;
+  }
+  .pill-task .dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.75);}
+  .pill-task.preventivo{background:#6d4fd1;}
+  .pill-task.correctivo{background:#9c3fae;}
+  .pill-task.verificacion{background:#4a3fc4;}
+  .pill-task.otro{background:#7a5ea8;}
+
+  /* flight dates stack (list view) */
+  .flight-dates{display:flex; flex-direction:column; gap:5px;}
+  .fd-row{display:flex; align-items:center; gap:7px; font-size:12.5px;}
+  .fd-ico{width:17px; height:17px; flex:none;}
+  .fd-row.dep .fd-ico{color:var(--accent);}
+  .fd-row.arr .fd-ico{color:var(--ok);}
+
+  /* transport icon (list view) */
+  .transport-ico-wrap{display:flex; align-items:center; justify-content:center;}
+  .transport-ico{width:20px; height:20px; color:var(--text-dim);}
+
+  /* maintenance-type pills wrap */
+  .pill-wrap{display:flex; flex-wrap:wrap; gap:5px; max-width:180px;}
+
+  /* technicians as text list (list view) */
+  .tech-textlist{display:flex; flex-direction:column; gap:3px;}
+  .tech-textlist span{font-size:12px; font-weight:600; letter-spacing:.01em;}
+
+  /* delta badge */
+  .delta-badge{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:99px;}
+  .delta-badge.ok{background:var(--ok-dim); color:var(--ok);}
+  .delta-badge.warn{background:var(--warn-dim); color:var(--warn);}
+  .delta-badge.neutral{background:var(--surface-3); color:var(--text-faint);}
+
+  /* wizard: equipo + tareas */
+  .equipo-block{border:1px solid var(--border-soft); border-radius:8px; padding:14px; margin-bottom:12px; background:var(--surface-2);}
+  .equipo-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .equipo-title{font-size:13.5px; font-weight:600;}
+  .equipo-sub{font-size:11.5px; color:var(--text-faint); margin-top:1px;}
+  .tarea-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr 32px; gap:8px; align-items:start;
+    background:var(--surface); border:1px solid var(--border-soft); border-radius:7px; padding:10px; margin-bottom:8px;
+  }
+  .tarea-row .field{margin-bottom:0; max-width:none;}
+  .tarea-remove{
+    width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text-faint); cursor:pointer; font-size:13px; align-self:center; justify-self:center;
+  }
+  .tarea-remove:hover{color:var(--crit); border-color:var(--crit);}
+  .alarm-toggle{display:flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; color:var(--text-dim);}
+  @media (max-width:760px){ .tarea-row{grid-template-columns:1fr; } .tarea-remove{justify-self:start;} }
+
+  /* wizard: movimientos */
+  .mov-row{
+    display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--border-soft);
+  }
+  .mov-row:last-child{border-bottom:none;}
+  .mov-route{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-dim);}
+  .mov-route .mono{color:var(--text);}
+  .newmov-form{
+    display:grid; grid-template-columns:1.3fr 1fr 1.3fr auto; gap:10px; align-items:end;
+    background:var(--surface-2); border:1px dashed var(--border); border-radius:8px; padding:14px; margin-top:12px;
+  }
+  .newmov-form .field{margin-bottom:0; max-width:none;}
+  @media (max-width:820px){ .newmov-form{grid-template-columns:1fr;} }
+
+  .section-title{font-size:15px; font-weight:600; margin:26px 0 12px;}
+  .section-title:first-child{margin-top:0;}
+
+  .airport-group-label{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--accent-text); background:var(--accent-dim); display:inline-block;
+    padding:4px 10px; border-radius:5px; margin-bottom:10px;
+  }
+  .pending-note{color:var(--warn); font-size:12px; font-weight:600;}
+
+  .pill-event{
+    display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px;
+    font-size:11px; font-weight:600; white-space:nowrap;
+  }
+  .pill-event .dot{width:6px; height:6px; border-radius:50%;}
+  .pill-event.mov{background:var(--surface-3); color:var(--text-dim);}
+  .pill-event.mov .dot{background:var(--text-faint);}
+  .pill-event.status{background:var(--accent-dim); color:var(--accent-text);}
+  .pill-event.status .dot{background:var(--accent);}
+
+  /* alta forms: search-to-add multiselect */
+  .multiselect{position:relative;}
+  .ms-search{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px 10px; font-size:13px; font-family:inherit;
+  }
+  .ms-results{
+    margin-top:4px; border:1px solid var(--border); border-radius:7px; background:var(--surface-2);
+    max-height:190px; overflow-y:auto; display:none; box-shadow:0 6px 16px rgba(0,0,0,.18);
+  }
+  .ms-results.open{display:block;}
+  .ms-result-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
+  .ms-result-row:hover{background:var(--surface-3);}
+  .ms-empty{padding:10px; font-size:12px; color:var(--text-faint);}
+  .ms-selected{display:flex; flex-direction:column; gap:5px; margin-top:10px;}
+  .ms-selected-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px;
+    background:var(--surface-2); border:1px solid var(--border-soft); border-radius:6px; font-size:13px;
+  }
+  .ms-remove{
+    background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:13px;
+    padding:2px 6px; border-radius:4px; line-height:1;
+  }
+  .ms-remove:hover{color:var(--crit); background:var(--crit-dim);}
+
+  .form-page{max-width:920px;}
+  .form-page textarea{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px 10px; font-size:13px; font-family:inherit; resize:vertical;
+  }
+
+  .topbar-left{display:flex; align-items:center; gap:12px;}
+  .btn-back-icon{
+    width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text); font-size:17px; cursor:pointer; flex:none; display:flex; align-items:center; justify-content:center;
+    line-height:1;
+  }
+  .btn-back-icon:hover:not(:disabled){background:var(--surface-3);}
+  .btn-back-icon:disabled{opacity:.3; cursor:not-allowed;}
+
+  .hamburger-btn{display:none;}
+  .rail-backdrop{display:none;}
+
+  @media (max-width:820px){
+    .rail{position:fixed; left:-216px; top:0; z-index:20; transition:left .18s; height:100vh;}
+    .rail.open{left:0;}
+    .content{padding:18px 16px 60px;}
+    .topbar{padding:12px 16px;}
+    .hamburger-btn{
+      display:flex; align-items:center; justify-content:center; width:36px; height:36px;
+      border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+      cursor:pointer; flex:none;
+    }
+    .hamburger-btn:hover{background:var(--surface-3);}
+    .rail-backdrop.open{
+      display:block; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:19;
+    }
+    .topbar{flex-wrap:wrap; row-gap:10px;}
+    .role-note{display:none;}
+    .page-title{font-size:20px;}
+  }
+</style>
+
+<div class="shell">
+  <!-- ============================================================ SIDEBAR -->
+  <nav class="rail" id="rail">
+    <div class="brand">
+      <div class="brand-mark">RADIO<span>AYUDAS</span></div>
+      <div class="brand-sub">Trazabilidad · Infraestructura ANAC</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-item" data-screen="dashboard">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 9l5-6 3 3.5L14 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Dashboard
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Infraestructura</div>
+      <div class="nav-item" data-screen="aeropuertos">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-4-4 12-2-5-5-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        Aeropuertos
+      </div>
+      <div class="nav-item" data-screen="catalogo">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Catálogo de modelos
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Logística</div>
+      <div class="nav-item active" data-screen="comisiones">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 4V2.5M11 4V2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Comisiones
+      </div>
+      <div class="nav-item" data-screen="vehiculos">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 10l1.2-4.2A1.5 1.5 0 014.6 4.7h6.8a1.5 1.5 0 011.4 1L14 10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><rect x="1.5" y="10" width="13" height="2.6" rx="1" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/><circle cx="11.4" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/></svg>
+        Vehículos
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Inventario</div>
+      <div class="nav-item" data-screen="inventario">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 5l6-3 6 3-6 3-6-3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 5v6l6 3 6-3V5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        Artículos
+      </div>
+      <div class="nav-item" data-screen="movimientos">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 5h9M11 5l-2.2-2.2M11 5l-2.2 2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11H5M5 11l2.2-2.2M5 11l2.2 2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Movimientos
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Trabajo diario</div>
+      <div class="nav-item" data-screen="mantenimiento">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 0110.9-3.4L14 3v4h-4l1.3-1.3A4.3 4.3 0 104.3 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Mantenimiento
+      </div>
+      <div class="nav-item" data-screen="tickets">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Tickets
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Administración</div>
+      <div class="nav-item" data-screen="tecnicos">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.2" r="2.4" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c.6-3 2.7-4.5 5.5-4.5s4.9 1.5 5.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Técnicos
+      </div>
+      <div class="nav-item" data-screen="auditoria" id="nav-auditoria">
+        <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Auditoría
+      </div>
+    </div>
+
+    <div class="rail-foot">
+      <div class="kv">
+        <span class="k">Sesión</span>
+        <span class="v">F. Robles</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="rail-backdrop" id="rail-backdrop" onclick="toggleRail()"></div>
+
+  <!-- ============================================================ MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger-btn" onclick="toggleRail()" title="Menú" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button class="btn-back-icon" id="btn-back" onclick="goBack()" title="Volver a la pantalla anterior" disabled>‹</button>
+        <div>
+          <div class="crumbs" id="crumbs">Logística</div>
+          <div class="page-title" id="page-title">Comisiones</div>
+        </div>
+      </div>
+      <div class="role-switch">
+        <div class="role-note" id="role-note">Viendo como <b>Admin</b> — acceso total.</div>
+        <label for="role-select">Ver como</label>
+        <select id="role-select">
+          <option value="admin" selected>Admin</option>
+          <option value="dev">Dev</option>
+          <option value="tecnico-asignado">Técnico (asignado a COM-0148)</option>
+          <option value="tecnico-otro">Técnico (sin asignar)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============================================================ DASHBOARD -->
+      <section class="screen" id="screen-dashboard">
+        <div class="grid grid-4" style="margin-bottom:16px;">
+          <div class="card stat">
+            <div class="stat-label">Comisiones en curso</div>
+            <div class="stat-value">3</div>
+            <div class="stat-delta">2 planificadas para esta semana</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label">Equipos fuera de servicio</div>
+            <div class="stat-value crit">2</div>
+            <div class="stat-delta">DME COR, ILS RGL (Tx1 y Tx2)</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label">Vencimientos &lt; 30 días</div>
+            <div class="stat-value warn">7</div>
+            <div class="stat-delta">4 verificaciones aéreas, 3 preventivos</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label">Tickets abiertos</div>
+            <div class="stat-value">11</div>
+            <div class="stat-delta">3 sin asignar hace &gt; 5 días</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Próximos vencimientos <small>vista v_upcoming_maintenance_due</small></div>
+            <div class="table-wrap">
+              <table>
+                <tr><th>Equipo</th><th>Aeropuerto</th><th>Tipo</th><th>Vence</th><th></th></tr>
+                <tr><td>ILS-07 RWY13</td><td class="mono">EZE</td><td><span class="pill accent"><span class="dot"></span>Verif. aérea</span></td><td class="mono">22/09/2026</td><td class="num warn">7 días</td></tr>
+                <tr><td>VOR MDZ</td><td class="mono">MDZ</td><td><span class="pill neutral"><span class="dot"></span>Preventivo anual</span></td><td class="mono">29/09/2026</td><td class="num warn">14 días</td></tr>
+                <tr><td>DME BRC</td><td class="mono">BRC</td><td><span class="pill accent"><span class="dot"></span>Verif. aérea</span></td><td class="mono">03/10/2026</td><td class="num">18 días</td></tr>
+                <tr><td>ILS-25 RWY07</td><td class="mono">COR</td><td><span class="pill neutral"><span class="dot"></span>Preventivo semestral</span></td><td class="mono">08/10/2026</td><td class="num">23 días</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Estado de infraestructura</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="pill ok"><span class="dot"></span>En servicio</span><b class="mono">41</b>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="pill warn"><span class="dot"></span>Degradado</span><b class="mono">3</b>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="pill crit"><span class="dot"></span>Fuera de servicio</span><b class="mono">2</b>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="card-title" style="margin-bottom:8px;">Comisiones activas</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; justify-content:space-between;"><span>COM-0148 · EZE, AEP</span><span class="pill accent"><span class="dot"></span>En curso</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>COM-0151 · BRC</span><span class="pill neutral"><span class="dot"></span>Planificada</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ AEROPUERTOS (list) -->
+      <section class="screen" id="screen-aeropuertos">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">41 equipos instalados en 9 aeropuertos.</div>
+          <button class="btn primary" onclick="showScreen('aeropuerto-nuevo')">+ Nuevo aeropuerto</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>IATA</th><th>Aeropuerto</th><th>Región</th><th>Equipos</th><th>Estado</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('aeropuerto-detalle')"><td class="mono">EZE</td><td>Ministro Pistarini</td><td>Buenos Aires</td><td class="num">6</td><td><span class="pill ok"><span class="dot"></span>Todo OK</span></td><td>›</td></tr>
+              <tr class="clickable" onclick="showScreen('aeropuerto-detalle')"><td class="mono">AEP</td><td>Jorge Newbery</td><td>Buenos Aires</td><td class="num">4</td><td><span class="pill ok"><span class="dot"></span>Todo OK</span></td><td>›</td></tr>
+              <tr class="clickable"><td class="mono">COR</td><td>Ingeniero Taravella</td><td>Córdoba</td><td class="num">5</td><td><span class="pill crit"><span class="dot"></span>1 fuera de servicio</span></td><td>›</td></tr>
+              <tr class="clickable"><td class="mono">MDZ</td><td>El Plumerillo</td><td>Cuyo</td><td class="num">4</td><td><span class="pill ok"><span class="dot"></span>Todo OK</span></td><td>›</td></tr>
+              <tr class="clickable"><td class="mono">BRC</td><td>Bariloche</td><td>Patagonia</td><td class="num">5</td><td><span class="pill warn"><span class="dot"></span>1 degradado</span></td><td>›</td></tr>
+              <tr class="clickable"><td class="mono">RGL</td><td>Río Gallegos</td><td>Patagonia</td><td class="num">3</td><td><span class="pill crit"><span class="dot"></span>1 fuera de servicio</span></td><td>›</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ AEROPUERTO NUEVO -->
+      <section class="screen" id="screen-aeropuerto-nuevo">
+        <div class="back-link" onclick="goBack()">‹ Aeropuertos</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo aeropuerto</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Alta de un aeropuerto en el catálogo de infraestructura.</p>
+
+        <div class="card form-page" style="max-width:460px;">
+          <div class="field" style="max-width:none;">
+            <label>Código IATA</label>
+            <input type="text" maxlength="3" placeholder="EZE" style="text-transform:uppercase; letter-spacing:.08em;">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>Nombre</label>
+            <input type="text" placeholder="Ministro Pistarini">
+          </div>
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Región</label>
+            <select>
+              <option>Buenos Aires</option>
+              <option>Córdoba</option>
+              <option>Cuyo</option>
+              <option>Patagonia</option>
+              <option>NOA</option>
+              <option>NEA</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar aeropuerto</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ AEROPUERTO DETALLE -->
+      <section class="screen" id="screen-aeropuerto-detalle">
+        <div class="back-link" onclick="goBack()">‹ Aeropuertos</div>
+        <div class="grid grid-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="kv"><span class="k">IATA</span><span class="v mono">EZE</span></div>
+          </div>
+          <div class="card">
+            <div class="kv"><span class="k">Región</span><span class="v">Buenos Aires</span></div>
+          </div>
+        </div>
+        <div class="btn-row" style="justify-content:space-between; align-items:center;">
+          <div class="section-title" style="margin:0;">Equipos instalados</div>
+          <button class="btn primary small" onclick="showScreen('equipo-nuevo')">+ Agregar equipo</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Equipo</th><th>Tipo</th><th>Modelo</th><th>Tx1</th><th>Tx2</th><th>Estado</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('equipo-detalle')"><td>ILS-07 RWY13</td><td>ILS</td><td>Thales 420</td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td></tr>
+              <tr class="clickable"><td>DME-07 RWY13</td><td>DME</td><td>Thales D420</td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td></tr>
+              <tr class="clickable"><td>VOR EZE</td><td>VOR</td><td>Indra VRB-52</td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td></tr>
+              <tr class="clickable"><td>DME EZE</td><td>DME</td><td>Indra DRB-52</td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ EQUIPO NUEVO -->
+      <section class="screen" id="screen-equipo-nuevo">
+        <div class="back-link" onclick="goBack()">‹ EZE</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo equipo instalado</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Instancia física de un modelo del catálogo en <b class="mono">EZE</b>. Un ILS siempre lleva su DME asociado.</p>
+
+        <div class="card form-page" style="max-width:520px;">
+          <div class="field" style="max-width:none;">
+            <label>Aeropuerto</label>
+            <input type="text" value="EZE — Ministro Pistarini" disabled style="opacity:.7;">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>Sistema principal</label>
+            <select id="sistema-principal-select" onchange="onSistemaPrincipalChange(this)">
+              <option value="ILS" data-tipo="ILS">ILS — Thales 420</option>
+              <option value="VOR" data-tipo="VOR">VOR — Indra VRB-52</option>
+            </select>
+          </div>
+          <div class="field" id="dme-wrap" style="max-width:none;">
+            <label id="dme-label">DME asociado <span style="text-transform:none; font-weight:400; color:var(--warn);">(obligatorio — todo ILS lleva su DME)</span></label>
+            <select>
+              <option>DME — Thales D420</option>
+              <option>DME — Indra DRB-52</option>
+            </select>
+          </div>
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Fecha de instalación</label>
+            <input type="date">
+          </div>
+        </div>
+
+        <p style="color:var(--text-faint); font-size:12px; max-width:520px; margin-top:12px;">
+          Al guardar se crean dos equipos instalados vinculados (el sistema principal y su DME), cada uno con sus dos transmisores TX1/TX2 en estado "fuera de servicio" hasta la primera puesta en marcha.
+        </p>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar equipo</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ EQUIPO DETALLE -->
+      <section class="screen" id="screen-equipo-detalle">
+        <div class="back-link" onclick="goBack()">‹ EZE</div>
+        <div class="grid grid-2" style="align-items:start;">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-title">ILS-07 RWY13 <span class="pill ok"><span class="dot"></span>En servicio</span></div>
+              <div class="grid grid-3">
+                <div class="kv"><span class="k">Modelo</span><span class="v">Thales 420</span></div>
+                <div class="kv"><span class="k">Instalado</span><span class="v mono">12/03/2019</span></div>
+                <div class="kv"><span class="k">DME asociado</span><span class="v">DME-07 RWY13</span></div>
+              </div>
+              <div class="divider"></div>
+              <div class="grid" style="grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="card" style="background:var(--surface-2);">
+                  <div class="card-title" style="margin-bottom:8px;">Tx1</div>
+                  <span class="pill ok"><span class="dot"></span>En servicio</span>
+                  <div class="btn-row" style="margin-top:10px;">
+                    <button class="btn small">Marcar degradado</button>
+                    <button class="btn small">Fuera de servicio</button>
+                  </div>
+                </div>
+                <div class="card" style="background:var(--surface-2);">
+                  <div class="card-title" style="margin-bottom:8px;">Tx2</div>
+                  <span class="pill ok"><span class="dot"></span>En servicio</span>
+                  <div class="btn-row" style="margin-top:10px;">
+                    <button class="btn small">Marcar degradado</button>
+                    <button class="btn small">Fuera de servicio</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Historial de estados</div>
+              <div class="table-wrap">
+                <table>
+                  <tr><th>Fecha</th><th>Entidad</th><th>Anterior → Nuevo</th><th>Contexto</th><th>Usuario</th></tr>
+                  <tr><td class="mono">02/08/2026 14:20</td><td>Tx1</td><td><span class="pill crit"><span class="dot"></span>Fuera</span> → <span class="pill ok"><span class="dot"></span>Servicio</span></td><td><span class="pill accent"><span class="dot"></span>COM-0140</span></td><td>J. Ibarra</td></tr>
+                  <tr><td class="mono">01/08/2026 09:05</td><td>Tx1</td><td><span class="pill ok"><span class="dot"></span>Servicio</span> → <span class="pill crit"><span class="dot"></span>Fuera</span></td><td><span class="pill neutral"><span class="dot"></span>Edición manual</span></td><td>M. Paz</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-title">Verificación aérea</div>
+              <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="kv">
+                  <span class="k">Última realizada</span>
+                  <span class="v mono">22/03/2026</span>
+                  <span class="pill-task verificacion" style="margin-top:4px; width:fit-content;"><span class="dot"></span>Sin alarmas</span>
+                </div>
+                <div class="kv"><span class="k">Próximo vencimiento</span><span class="v mono">22/09/2026</span></div>
+              </div>
+              <div class="pill warn" style="margin-top:10px;"><span class="dot"></span>Vence en 7 días</div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-title">Mantenimiento preventivo <small>frecuencia base: trimestral</small></div>
+              <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="kv">
+                  <span class="k">Último realizado</span>
+                  <span class="v mono">18/03/2026</span>
+                  <span class="pill-task preventivo" style="margin-top:4px; width:fit-content;"><span class="dot"></span>Semestral</span>
+                </div>
+                <div class="kv"><span class="k">Próximo vencimiento <span style="text-transform:none; font-weight:400;">(vuelve a trimestral)</span></span><span class="v mono">18/06/2026</span></div>
+              </div>
+              <div class="pill crit" style="margin-top:10px;"><span class="dot"></span>Vencido</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Tickets abiertos <small>2</small></div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="checklist-row" style="padding:0 0 10px;">
+                  <div class="cr-main">
+                    <div class="cr-title">Ruido en la señal de glide slope</div>
+                    <div class="cr-sub">Tx2 · reportado por J. Ibarra</div>
+                  </div>
+                  <span class="pill warn"><span class="dot"></span>Pendiente</span>
+                </div>
+                <div class="checklist-row" style="padding:0;">
+                  <div class="cr-main">
+                    <div class="cr-title">Revisar fijación de antena localizer</div>
+                    <div class="cr-sub">Equipo · reportado por M. Paz</div>
+                  </div>
+                  <span class="pill neutral"><span class="dot"></span>En progreso</span>
+                </div>
+              </div>
+              <button class="btn small ghost" style="margin-top:12px;">+ Tarea pendiente</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ CATÁLOGO -->
+      <section class="screen" id="screen-catalogo">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">Define marca, modelo y frecuencia de verificación aérea exigida.</div>
+          <button class="btn primary" onclick="showScreen('modelo-nuevo')">+ Nuevo modelo</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Tipo</th><th>Marca / Modelo</th><th>Verif. aérea</th><th>Instalados en el país</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('modelo-detalle')">
+                <td><span class="pill accent"><span class="dot"></span>ILS</span></td>
+                <td>Thales 420</td>
+                <td class="num">6 meses</td>
+                <td class="num">8</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td><span class="pill neutral"><span class="dot"></span>DME</span></td>
+                <td>Thales D420</td>
+                <td class="num">6 meses</td>
+                <td class="num">8</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td><span class="pill neutral"><span class="dot"></span>VOR</span></td>
+                <td>Indra VRB-52</td>
+                <td class="num">12 meses</td>
+                <td class="num">6</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td><span class="pill neutral"><span class="dot"></span>DME</span></td>
+                <td>Indra DRB-52</td>
+                <td class="num">6 meses</td>
+                <td class="num">6</td>
+                <td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ MODELO NUEVO -->
+      <section class="screen" id="screen-modelo-nuevo">
+        <div class="back-link" onclick="goBack()">‹ Catálogo de modelos</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo modelo</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Alta de un modelo en el catálogo. Después se instalan equipos físicos de este modelo en cada aeropuerto.</p>
+
+        <div class="card form-page" style="max-width:460px;">
+          <div class="field" style="max-width:none;">
+            <label>Marca</label>
+            <input type="text" placeholder="Thales">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>Modelo</label>
+            <input type="text" placeholder="420">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>Tipo de equipo</label>
+            <select>
+              <option>ILS</option>
+              <option>VOR</option>
+              <option>DME</option>
+            </select>
+          </div>
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Frecuencia de verificación aérea exigida</label>
+            <select>
+              <option>Cada 6 meses</option>
+              <option>Cada 12 meses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar modelo</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ MODELO DETALLE -->
+      <section class="screen" id="screen-modelo-detalle">
+        <div class="back-link" onclick="goBack()">‹ Catálogo de modelos</div>
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-title">Thales 420 <span class="pill accent"><span class="dot"></span>ILS</span></div>
+          <div class="grid grid-3">
+            <div class="kv"><span class="k">Verificación aérea exigida</span><span class="v">cada 6 meses</span></div>
+            <div class="kv"><span class="k">Instalados en el país</span><span class="v mono">8</span></div>
+            <div class="kv"><span class="k">Fuera de servicio</span><span class="v" style="color:var(--crit);">0</span></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:0;">Equipos instalados de este modelo</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Aeropuerto</th><th>Equipo</th><th>Tx1</th><th>Tx2</th><th>Última verificación</th><th>Último preventivo</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('equipo-detalle')">
+                <td class="mono">EZE</td><td>ILS-07 RWY13</td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td class="mono">22/03/2026</td>
+                <td class="mono">18/09/2026</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">AEP</td><td>ILS-11 RWY13</td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td class="mono">04/04/2026</td>
+                <td class="mono">04/04/2026</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">COR</td><td>ILS-18 RWY18</td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td><span class="pill crit"><span class="dot"></span>Fuera</span></td>
+                <td class="mono">30/01/2026</td>
+                <td class="mono">15/07/2026</td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">MDZ</td><td>ILS-09 RWY09</td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td><span class="pill ok"><span class="dot"></span>Servicio</span></td>
+                <td class="mono">12/02/2026</td>
+                <td class="mono">12/02/2026</td>
+                <td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ COMISIONES (list) -->
+      <section class="screen active" id="screen-comisiones">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="tabs" style="border:none; margin:0;">
+            <div class="tab active">Todas</div>
+            <div class="tab">Planificadas</div>
+            <div class="tab">En curso</div>
+            <div class="tab">Finalizadas</div>
+          </div>
+          <button class="btn primary" onclick="showScreen('comision-nueva')">+ Nueva comisión</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Fechas</th><th>Destinos</th><th>Técnicos</th><th>Tareas</th><th>Transporte</th><th>Estado</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('comision-detalle')">
+                <td>
+                  <div class="flight-dates">
+                    <div class="fd-row dep"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(-45 12 12)"/></svg><span class="mono">14/09/2026</span></div>
+                    <div class="fd-row arr"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(135 12 12)"/></svg><span class="mono">18/09/2026</span></div>
+                  </div>
+                </td>
+                <td class="mono">EZE, AEP</td>
+                <td><div class="tech-textlist"><span>J. IBARRA</span><span>M. PAZ</span></div></td>
+                <td><div class="pill-wrap"><span class="pill-task preventivo"><span class="dot"></span>Preventivo</span><span class="pill-task verificacion"><span class="dot"></span>Verificación</span></div></td>
+                <td class="transport-ico-wrap"><svg class="transport-ico" viewBox="0 0 16 16" fill="none"><path d="M2 10l1.2-4.2A1.5 1.5 0 014.6 4.7h6.8a1.5 1.5 0 011.4 1L14 10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><rect x="1.5" y="10" width="13" height="2.6" rx="1" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/><circle cx="11.4" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/></svg></td>
+                <td><span class="pill-status-strong encurso">En curso</span></td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td>
+                  <div class="flight-dates">
+                    <div class="fd-row dep"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(-45 12 12)"/></svg><span class="mono">19/09/2026</span></div>
+                    <div class="fd-row arr"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(135 12 12)"/></svg><span class="mono">23/09/2026</span></div>
+                  </div>
+                </td>
+                <td class="mono">BRC</td>
+                <td><div class="tech-textlist"><span>R. SOSA</span></div></td>
+                <td><div class="pill-wrap"><span class="pill-task preventivo"><span class="dot"></span>Preventivo</span></div></td>
+                <td class="transport-ico-wrap"><svg class="transport-ico" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(45 12 12)"/></svg></td>
+                <td><span class="pill-status-strong planificada">Planificada</span></td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td>
+                  <div class="flight-dates">
+                    <div class="fd-row dep"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(-45 12 12)"/></svg><span class="mono">01/09/2026</span></div>
+                    <div class="fd-row arr"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(135 12 12)"/></svg><span class="mono">06/09/2026</span></div>
+                  </div>
+                </td>
+                <td class="mono">COR, MDZ</td>
+                <td><div class="tech-textlist"><span>J. IBARRA</span><span>R. SOSA</span><span>M. PAZ</span></div></td>
+                <td><div class="pill-wrap"><span class="pill-task correctivo"><span class="dot"></span>Correctivo</span><span class="pill-task preventivo"><span class="dot"></span>Preventivo</span></div></td>
+                <td class="transport-ico-wrap"><svg class="transport-ico" viewBox="0 0 16 16" fill="none"><path d="M2 10l1.2-4.2A1.5 1.5 0 014.6 4.7h6.8a1.5 1.5 0 011.4 1L14 10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><rect x="1.5" y="10" width="13" height="2.6" rx="1" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/><circle cx="11.4" cy="12.8" r="1.1" stroke="currentColor" stroke-width="1.2"/></svg></td>
+                <td><span class="pill-status-strong finalizada">Finalizada</span></td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td>
+                  <div class="flight-dates">
+                    <div class="fd-row dep"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(-45 12 12)"/></svg><span class="mono">01/08/2026</span></div>
+                    <div class="fd-row arr"><svg class="fd-ico" viewBox="0 0 24 24"><line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".35"/><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(135 12 12)"/></svg><span class="mono">05/08/2026</span></div>
+                  </div>
+                </td>
+                <td class="mono">RGL</td>
+                <td><div class="tech-textlist"><span>J. IBARRA</span></div></td>
+                <td><div class="pill-wrap"><span class="pill-task correctivo"><span class="dot"></span>Correctivo</span></div></td>
+                <td class="transport-ico-wrap"><svg class="transport-ico" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(45 12 12)"/></svg></td>
+                <td><span class="pill-status-strong finalizada">Finalizada</span></td>
+                <td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ COMISION NUEVA -->
+      <section class="screen" id="screen-comision-nueva">
+        <div class="back-link" onclick="goBack()">‹ Comisiones</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nueva comisión</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Planificación del viaje: destinos, cuadrilla, transporte y fechas.</p>
+
+        <div class="grid grid-2 form-page" style="align-items:start;">
+          <div class="card">
+            <div class="field" style="max-width:none;">
+              <label>Fecha de salida planificada</label>
+              <input type="date">
+            </div>
+            <div class="field" style="max-width:none;">
+              <label>Fecha de llegada planificada</label>
+              <input type="date">
+            </div>
+            <div class="field" style="max-width:none;">
+              <label>Transporte</label>
+              <div class="seg" style="width:fit-content;">
+                <button class="sel-yes on" onclick="document.getElementById('vehiculo-field').style.display='flex'">Terrestre</button>
+                <button class="sel-no" onclick="document.getElementById('vehiculo-field').style.display='none'">Aéreo</button>
+              </div>
+            </div>
+            <div class="field" id="vehiculo-field" style="max-width:none;">
+              <label>Vehículo</label>
+              <select>
+                <option>AC-114 KX — Toyota Hilux</option>
+                <option>AC-201 LM — Ford Ranger (en uso ⚠)</option>
+                <option>AC-055 QP — Toyota Hilux</option>
+              </select>
+            </div>
+            <div class="field" style="max-width:none; margin-bottom:0;">
+              <label>Notas</label>
+              <textarea rows="3" placeholder="Observaciones de la planificación…"></textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Destinos <small>aeropuertos a visitar</small></div>
+            <div class="multiselect" data-pool="airports" data-ms="destinos">
+              <input type="text" class="ms-search" placeholder="Buscar por nombre o código IATA…" oninput="msFilter(this)" onfocus="msFilter(this)">
+              <div class="ms-results"></div>
+              <div class="ms-selected"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="card-title">Técnicos <small>cuadrilla asignada</small></div>
+            <div class="multiselect" data-pool="technicians" data-ms="tecnicos">
+              <input type="text" class="ms-search" placeholder="Buscar técnico por nombre…" oninput="msFilter(this)" onfocus="msFilter(this)">
+              <div class="ms-results"></div>
+              <div class="ms-selected"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Crear comisión</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ COMISION DETALLE -->
+      <section class="screen" id="screen-comision-detalle">
+        <div class="back-link" onclick="goBack()">‹ Comisiones</div>
+
+        <div id="tecnico-otro-banner" class="lock-banner" style="display:none;">
+          ⚠ No estás asignado a esta comisión — solo lectura. Los botones de edición y el asistente de cierre están deshabilitados.
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:14px; align-items:start;">
+          <div class="card">
+            <div class="card-title">COM-0148 <span class="pill accent"><span class="dot"></span>En curso</span></div>
+            <div class="grid grid-3">
+              <div class="kv"><span class="k">Destinos</span><span class="v mono">EZE, AEP</span></div>
+              <div class="kv"><span class="k">Transporte</span><span class="v mono">AC-114 KX</span></div>
+              <div class="kv"><span class="k">Salida</span><span class="v mono">14/09/2026</span></div>
+              <div class="kv">
+                <span class="k">Llegada planificada</span>
+                <span class="v mono">18/09/2026 <span class="delta-badge neutral" style="margin-left:4px;">en curso</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Técnicos <small>2</small></div>
+            <div>
+              <div class="name-list-row" onclick="showScreen('tecnico-detalle')">
+                <div class="avatar">JI</div>
+                <div>
+                  <div class="name-list-title">Juan Ibarra</div>
+                  <div class="name-list-sub">Técnico</div>
+                </div>
+                <span class="name-list-arrow">›</span>
+              </div>
+              <div class="name-list-row" onclick="showScreen('tecnico-detalle')">
+                <div class="avatar">MP</div>
+                <div>
+                  <div class="name-list-title">Marina Paz</div>
+                  <div class="name-list-sub">Técnico</div>
+                </div>
+                <span class="name-list-arrow">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:0;">Equipos de los aeropuertos visitados <small style="font-weight:400; color:var(--text-faint);">EZE, AEP — orden: aeropuerto · sistema · equipo · tareas</small></div>
+        <div class="card" style="margin-bottom:18px;">
+
+          <div class="airport-group-label">EZE — Ministro Pistarini</div>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Sistema</th><th>Equipo</th><th>Tareas realizadas</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('equipo-detalle')">
+                <td><span class="pill accent"><span class="dot"></span>ILS</span></td>
+                <td>ILS-07 RWY13</td>
+                <td><div class="pill-wrap"><span class="pill-task preventivo"><span class="dot"></span>Preventivo semestral</span><span class="pill-task verificacion"><span class="dot"></span>Verif. sin alarmas</span></div></td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable" onclick="showScreen('equipo-detalle')">
+                <td><span class="pill neutral"><span class="dot"></span>DME</span></td>
+                <td>DME-07 RWY13</td>
+                <td><div class="pill-wrap"><span class="pill-task preventivo"><span class="dot"></span>Preventivo semestral</span></div></td>
+                <td>›</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="airport-group-label">AEP — Jorge Newbery</div>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Sistema</th><th>Equipo</th><th>Tareas realizadas</th><th></th></tr>
+              <tr class="clickable">
+                <td><span class="pill neutral"><span class="dot"></span>VOR</span></td>
+                <td>VOR AEP</td>
+                <td><span class="pending-note">⚠ Falta completar — sin tareas cargadas todavía</span></td>
+                <td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td><span class="pill neutral"><span class="dot"></span>DME</span></td>
+                <td>DME AEP</td>
+                <td><span class="pending-note">⚠ Falta completar — sin tareas cargadas todavía</span></td>
+                <td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="section-title">Movimientos asociados <small style="font-weight:400; color:var(--text-faint);">1 movimiento, 4 artículos</small></div>
+        <div class="card" style="margin-bottom:18px;">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Ruta</th><th>Fecha</th><th>Artículos</th><th>Estado general</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('movimiento-detalle')">
+                <td class="mono">Pañol Central → EZE</td><td class="mono">14/09/2026</td>
+                <td><span class="pill neutral"><span class="dot"></span>4 artículos</span></td>
+                <td><span class="pill warn"><span class="dot"></span>2 abiertos</span></td><td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <button class="btn primary" id="btn-abrir-cierre" onclick="showScreen('cierre-wizard')">Abrir asistente de cierre</button>
+      </section>
+
+      <!-- ============================================================ MOVIMIENTO DETALLE -->
+      <section class="screen" id="screen-movimiento-detalle">
+        <div class="back-link" onclick="goBack()">‹ Volver</div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Movimiento <span class="mono" style="font-weight:400; color:var(--text-faint);">MOV-01942</span></div>
+          <div class="grid grid-3">
+            <div class="kv"><span class="k">Origen</span><span class="v">Pañol Central</span></div>
+            <div class="kv"><span class="k">Destino</span><span class="v mono">EZE</span></div>
+            <div class="kv"><span class="k">Fecha</span><span class="v mono">14/09/2026</span></div>
+            <div class="kv"><span class="k">Comisión</span><span class="v mono">COM-0148</span></div>
+            <div class="kv"><span class="k">Artículos</span><span class="v mono">4</span></div>
+            <div class="kv"><span class="k">Estado general</span><span class="v"><span class="pill warn"><span class="dot"></span>2 abiertos</span></span></div>
+          </div>
+          <div class="divider"></div>
+          <div class="kv"><span class="k">Notas</span><span class="v" style="font-weight:400;">Salida de pañol para la comisión COM-0148 (EZE/AEP).</span></div>
+        </div>
+
+        <div class="section-title" style="margin-top:0;">Artículos de este movimiento <small style="font-weight:400; color:var(--text-faint);">un mismo evento puede mover varios a la vez</small></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>N° Activo</th><th>Descripción</th><th>Tipo</th><th>Estado del movimiento</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('articulo-detalle')">
+                <td class="mono">RPT-00231</td><td>Módulo RF Thales 420</td>
+                <td><span class="pill accent"><span class="dot"></span>Repuesto</span></td>
+                <td><span class="pill warn"><span class="dot"></span>Abierto</span></td><td>›</td>
+              </tr>
+              <tr class="clickable" onclick="showScreen('articulo-detalle')">
+                <td class="mono">RPT-00287</td><td>Fuente de alimentación D420</td>
+                <td><span class="pill accent"><span class="dot"></span>Repuesto</span></td>
+                <td><span class="pill crit"><span class="dot"></span>Cerrado · consumido</span></td><td>›</td>
+              </tr>
+              <tr class="clickable" onclick="showScreen('articulo-detalle')">
+                <td class="mono">HER-00042</td><td>Analizador de espectro portátil</td>
+                <td><span class="pill neutral"><span class="dot"></span>Herramienta</span></td>
+                <td><span class="pill warn"><span class="dot"></span>Abierto</span></td><td>›</td>
+              </tr>
+              <tr class="clickable" onclick="showScreen('articulo-detalle')">
+                <td class="mono">HER-00019</td><td>Set de torque calibrado</td>
+                <td><span class="pill neutral"><span class="dot"></span>Herramienta</span></td>
+                <td><span class="pill crit"><span class="dot"></span>Cerrado · devuelta</span></td><td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ TÉCNICO DETALLE -->
+      <section class="screen" id="screen-tecnico-detalle">
+        <div class="back-link" onclick="goBack()">‹ COM-0148</div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Juan Ibarra <span class="pill accent"><span class="dot"></span>Técnico</span></div>
+          <div class="grid grid-3">
+            <div class="kv"><span class="k">DNI</span><span class="v mono">28.441.902</span></div>
+            <div class="kv"><span class="k">Mail</span><span class="v mono">jibarra@anac.gob.ar</span></div>
+            <div class="kv"><span class="k">Comisiones activas</span><span class="v">1</span></div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:0;">Comisiones asignadas</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>ID</th><th>Destinos</th><th>Fechas</th><th>Estado</th></tr>
+              <tr class="clickable" onclick="showScreen('comision-detalle')"><td class="mono">COM-0148</td><td class="mono">EZE, AEP</td><td class="mono">14/09/2026 → 18/09/2026</td><td><span class="pill-status accent"><span class="dot"></span>En curso</span></td></tr>
+              <tr class="clickable"><td class="mono">COM-0146</td><td class="mono">COR, MDZ</td><td class="mono">01/09/2026 → 06/09/2026</td><td><span class="pill-status ok"><span class="dot"></span>Finalizada</span></td></tr>
+              <tr class="clickable"><td class="mono">COM-0140</td><td class="mono">RGL</td><td class="mono">01/08/2026 → 05/08/2026</td><td><span class="pill-status ok"><span class="dot"></span>Finalizada</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ WIZARD DE CIERRE -->
+      <section class="screen" id="screen-cierre-wizard">
+        <div class="back-link" onclick="goBack()">‹ COM-0148</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Cierre de comisión — COM-0148</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Conciliación operativa y logística. Podés cerrar aunque queden ítems pendientes: quedan registrados como advertencia.</p>
+
+        <div class="steps">
+          <div class="step done" data-wstep="1"><div class="step-num">✓</div><div class="step-label">Llegada</div></div>
+          <div class="step-line"></div>
+          <div class="step current" data-wstep="2"><div class="step-num">2</div><div class="step-label">Equipos intervenidos</div></div>
+          <div class="step-line"></div>
+          <div class="step" data-wstep="3"><div class="step-num">3</div><div class="step-label">Conciliación de inventario</div></div>
+          <div class="step-line"></div>
+          <div class="step" data-wstep="4"><div class="step-num">4</div><div class="step-label">Resumen y cierre</div></div>
+        </div>
+
+        <div class="card wizard-panel">
+
+          <!-- step 1 -->
+          <div class="wstep" data-step="1">
+            <div class="field">
+              <label>Fecha real de llegada</label>
+              <input type="date" value="2026-09-18">
+            </div>
+          </div>
+
+          <!-- step 2 -->
+          <div class="wstep active" data-step="2">
+            <p style="color:var(--text-dim); font-size:12.5px; margin:0 0 14px;">Un equipo puede tener más de una tarea. Cada tarea trae por defecto la fecha de finalización de la comisión (18/09/2026) y se puede editar. Un equipo sin tareas queda registrado como no intervenido.</p>
+
+            <div class="equipo-block">
+              <div class="equipo-head">
+                <div>
+                  <div class="equipo-title">ILS-07 RWY13</div>
+                  <div class="equipo-sub">ILS · Thales 420 · EZE</div>
+                </div>
+                <button class="btn small ghost" onclick="addTareaRow(this)">+ Agregar tarea</button>
+              </div>
+
+              <div class="tarea-row">
+                <div class="field"><label>Tipo de tarea</label>
+                  <select onchange="toggleAlarmField(this)">
+                    <option>Preventivo mensual</option>
+                    <option>Preventivo trimestral</option>
+                    <option selected>Preventivo semestral</option>
+                    <option>Preventivo anual</option>
+                    <option>Correctivo</option>
+                    <option value="verif">Verificación aérea</option>
+                  </select>
+                </div>
+                <div class="field"><label>Fecha</label><input type="date" value="2026-09-18"></div>
+                <div class="field"><label>Comentario</label><input type="text" placeholder="Observaciones de la tarea…"></div>
+                <button class="tarea-remove" onclick="this.closest('.tarea-row').remove()">✕</button>
+              </div>
+
+              <div class="tarea-row">
+                <div class="field"><label>Tipo de tarea</label>
+                  <select onchange="toggleAlarmField(this)">
+                    <option>Preventivo mensual</option>
+                    <option>Preventivo trimestral</option>
+                    <option>Preventivo semestral</option>
+                    <option>Preventivo anual</option>
+                    <option>Correctivo</option>
+                    <option value="verif" selected>Verificación aérea</option>
+                  </select>
+                  <div class="alarm-toggle">
+                    <div class="seg">
+                      <button class="sel-no on">Sin alarmas</button>
+                      <button class="sel-yes">Con alarmas</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="field"><label>Fecha</label><input type="date" value="2026-09-18"></div>
+                <div class="field"><label>Comentario</label><input type="text" value="Verificación de rutina, sin novedades."></div>
+                <button class="tarea-remove" onclick="this.closest('.tarea-row').remove()">✕</button>
+              </div>
+            </div>
+
+            <div class="equipo-block">
+              <div class="equipo-head">
+                <div>
+                  <div class="equipo-title">DME-07 RWY13</div>
+                  <div class="equipo-sub">DME · Thales D420 · EZE</div>
+                </div>
+                <button class="btn small ghost" onclick="addTareaRow(this)">+ Agregar tarea</button>
+              </div>
+              <div class="tarea-row">
+                <div class="field"><label>Tipo de tarea</label>
+                  <select onchange="toggleAlarmField(this)">
+                    <option>Preventivo mensual</option>
+                    <option>Preventivo trimestral</option>
+                    <option selected>Preventivo semestral</option>
+                    <option>Preventivo anual</option>
+                    <option>Correctivo</option>
+                    <option value="verif">Verificación aérea</option>
+                  </select>
+                </div>
+                <div class="field"><label>Fecha</label><input type="date" value="2026-09-18"></div>
+                <div class="field"><label>Comentario</label><input type="text" placeholder="Observaciones de la tarea…"></div>
+                <button class="tarea-remove" onclick="this.closest('.tarea-row').remove()">✕</button>
+              </div>
+            </div>
+
+            <div class="equipo-block">
+              <div class="equipo-head">
+                <div>
+                  <div class="equipo-title">VOR AEP</div>
+                  <div class="equipo-sub">VOR · Indra VRB-52 · AEP</div>
+                </div>
+                <button class="btn small ghost" onclick="addTareaRow(this)">+ Agregar tarea</button>
+              </div>
+              <div class="empty" style="padding:10px 0;">Sin tareas cargadas — queda como no intervenido.</div>
+            </div>
+
+            <div class="equipo-block">
+              <div class="equipo-head">
+                <div>
+                  <div class="equipo-title">DME AEP</div>
+                  <div class="equipo-sub">DME · Indra DRB-52 · AEP</div>
+                </div>
+                <button class="btn small ghost" onclick="addTareaRow(this)">+ Agregar tarea</button>
+              </div>
+              <div class="empty" style="padding:10px 0;">Sin tareas cargadas — queda como no intervenido.</div>
+            </div>
+          </div>
+
+          <!-- step 3 -->
+          <div class="wstep" data-step="3">
+            <div class="section-title" style="margin-top:0;">Movimientos de la comisión <small style="font-weight:400; color:var(--text-faint);">generados al salir hacia EZE/AEP el 14/09/2026</small></div>
+
+            <div class="airport-group-label">Pañol Central → EZE · 14/09/2026 · 1 movimiento, 4 artículos</div>
+
+            <div class="mov-row">
+              <div class="cr-main">
+                <div class="cr-title mono">RPT-00231</div>
+                <div class="mov-route">Módulo RF Thales 420 · <span class="mono">Pañol Central</span> → <span class="mono">EZE</span></div>
+              </div>
+              <button class="btn small">Marcar usado (baja)</button>
+            </div>
+            <div class="mov-row">
+              <div class="cr-main">
+                <div class="cr-title mono">RPT-00287</div>
+                <div class="mov-route">Fuente de alimentación D420 · <span class="mono">Pañol Central</span> → <span class="mono">EZE</span></div>
+              </div>
+              <span class="pill crit"><span class="dot"></span>Cerrado · consumido</span>
+            </div>
+            <div class="mov-row">
+              <div class="cr-main">
+                <div class="cr-title mono">HER-00042</div>
+                <div class="mov-route">Analizador de espectro portátil · <span class="mono">Pañol Central</span> → <span class="mono">EZE</span></div>
+              </div>
+              <div class="seg">
+                <button class="sel-yes on">Devuelta</button>
+                <button class="sel-no">No vuelve</button>
+              </div>
+            </div>
+            <div class="mov-row">
+              <div class="cr-main">
+                <div class="cr-title mono">HER-00019</div>
+                <div class="mov-route">Set de torque calibrado · <span class="mono">Pañol Central</span> → <span class="mono">EZE</span></div>
+              </div>
+              <div class="seg">
+                <button class="sel-yes">Devuelta</button>
+                <button class="sel-no">No vuelve</button>
+              </div>
+              <span class="pill warn" style="margin-left:8px;"><span class="dot"></span>Pendiente</span>
+            </div>
+
+            <div class="section-title">Nuevo movimiento <small style="font-weight:400; color:var(--text-faint);">traer un elemento del aeropuerto visitado al taller</small></div>
+            <div class="newmov-form">
+              <div class="field">
+                <label>Artículo (en EZE o AEP)</label>
+                <select>
+                  <option>ART-00551 — Unidad ILS reemplazada (falla) · EZE</option>
+                  <option>ART-00398 — Antena localizer dañada · AEP</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Destino</label>
+                <select>
+                  <option>Taller Central</option>
+                  <option>Pañol Central</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Notas</label>
+                <input type="text" placeholder="Motivo del retorno…">
+              </div>
+              <button class="btn primary">Generar movimiento</button>
+            </div>
+          </div>
+
+          <!-- step 4 -->
+          <div class="wstep" data-step="4">
+            <div class="warn-box">
+              ⚠ Se puede cerrar igual — quedan advertencias registradas para seguimiento posterior.
+            </div>
+            <div class="summary-box">
+              <div class="summary-line"><span>Equipos sin intervenir</span><b class="mono" style="color:var(--warn);">2</b></div>
+              <div class="summary-line"><span>Herramientas con checklist pendiente</span><b class="mono" style="color:var(--warn);">1</b></div>
+              <div class="summary-line"><span>Repuestos consumidos</span><b class="mono">1</b></div>
+              <div class="summary-line"><span>Movimientos de retorno generados</span><b class="mono">1</b></div>
+            </div>
+            <button class="btn primary">Cerrar comisión</button>
+          </div>
+
+        </div>
+
+        <div class="btn-row" style="margin-top:16px; justify-content:space-between;">
+          <button class="btn ghost" onclick="wizardNav(-1)">‹ Anterior</button>
+          <button class="btn primary" onclick="wizardNav(1)">Siguiente ›</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ VEHICULOS -->
+      <section class="screen" id="screen-vehiculos">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">Si un vehículo ya está en uso, se avisa pero se permite igual asignarlo.</div>
+          <button class="btn primary" onclick="showScreen('vehiculo-nuevo')">+ Nuevo vehículo</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Patente</th><th>Modelo</th><th>En uso</th><th>Comisión actual</th></tr>
+              <tr><td class="mono">AC-114 KX</td><td>Toyota Hilux</td><td><span class="pill warn"><span class="dot"></span>En uso</span></td><td class="mono">COM-0148</td></tr>
+              <tr><td class="mono">AC-201 LM</td><td>Ford Ranger</td><td><span class="pill neutral"><span class="dot"></span>Libre</span></td><td>—</td></tr>
+              <tr><td class="mono">AC-055 QP</td><td>Toyota Hilux</td><td><span class="pill neutral"><span class="dot"></span>Libre</span></td><td>—</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ VEHICULO NUEVO -->
+      <section class="screen" id="screen-vehiculo-nuevo">
+        <div class="back-link" onclick="goBack()">‹ Vehículos</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo vehículo</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Alta de una camioneta de la flota para asignar a comisiones.</p>
+
+        <div class="card form-page" style="max-width:420px;">
+          <div class="field" style="max-width:none;">
+            <label>Patente</label>
+            <input type="text" placeholder="AC-114 KX" style="text-transform:uppercase;">
+          </div>
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Marca / Modelo</label>
+            <input type="text" placeholder="Toyota Hilux">
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar vehículo</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ INVENTARIO -->
+      <section class="screen" id="screen-inventario">
+        <div class="tabs">
+          <div class="tab active">Todos</div>
+          <div class="tab">Herramientas</div>
+          <div class="tab">Repuestos</div>
+        </div>
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">156 artículos · 12 en tránsito.</div>
+          <button class="btn primary" onclick="showScreen('articulo-nuevo')">+ Nuevo artículo</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>N° Activo</th><th>Descripción</th><th>N° Serie</th><th>Tipo</th><th>Ubicación</th><th>Estado</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('articulo-detalle')">
+                <td class="mono">HER-00042</td><td>Analizador de espectro portátil</td><td class="mono">SN-88213</td>
+                <td><span class="pill neutral"><span class="dot"></span>Herramienta</span></td><td>Pañol Central</td>
+                <td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">HER-00019</td><td>Set de torque calibrado</td><td class="mono">SN-71042</td>
+                <td><span class="pill neutral"><span class="dot"></span>Herramienta</span></td><td class="mono">EZE (en comisión)</td>
+                <td><span class="pill ok"><span class="dot"></span>En servicio</span></td><td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">RPT-00231</td><td>Módulo RF Thales 420</td><td class="mono">SN-30981</td>
+                <td><span class="pill accent"><span class="dot"></span>Repuesto</span></td><td class="mono">EZE</td>
+                <td><span class="pill crit"><span class="dot"></span>Baja</span></td><td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">ART-00551</td><td>Unidad ILS (reemplazada por falla)</td><td class="mono">SN-20456</td>
+                <td><span class="pill accent"><span class="dot"></span>Repuesto</span></td><td class="mono">EZE</td>
+                <td><span class="pill warn"><span class="dot"></span>Fuera de servicio</span></td><td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ ARTICULO NUEVO -->
+      <section class="screen" id="screen-articulo-nuevo">
+        <div class="back-link" onclick="goBack()">‹ Artículos</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo artículo</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Alta de una herramienta o un repuesto en el inventario.</p>
+
+        <div class="card form-page" style="max-width:520px;">
+          <div class="field" style="max-width:none;">
+            <label>Tipo de artículo</label>
+            <div class="seg" style="width:fit-content;">
+              <button class="sel-yes on" onclick="onArticuloKindChange(this,'herramienta')">Herramienta</button>
+              <button class="sel-no" onclick="onArticuloKindChange(this,'repuesto')">Repuesto</button>
+            </div>
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>N° de Activo</label>
+            <input type="text" placeholder="HER-00043" style="text-transform:uppercase;">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>N° de Serie</label>
+            <input type="text" placeholder="SN-91827">
+          </div>
+          <div class="field" style="max-width:none;">
+            <label>Descripción</label>
+            <input type="text" placeholder="Analizador de espectro portátil">
+          </div>
+
+          <div id="herramienta-fields">
+            <div class="field" style="max-width:none;">
+              <label>Tipo de herramienta</label>
+              <input type="text" placeholder="Instrumento de medición">
+            </div>
+            <div class="field" style="max-width:none;">
+              <label>Vencimiento de calibración</label>
+              <input type="date">
+            </div>
+          </div>
+
+          <div id="repuesto-fields" style="display:none;">
+            <div class="field" style="max-width:none;">
+              <label>Tipo de repuesto</label>
+              <input type="text" placeholder="Módulo RF">
+            </div>
+            <div class="field" style="max-width:none;">
+              <label>Modelo al que aplica</label>
+              <select>
+                <option>ILS — Thales 420</option>
+                <option>DME — Thales D420</option>
+                <option>VOR — Indra VRB-52</option>
+                <option>DME — Indra DRB-52</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="max-width:none;">
+            <label>Ubicación actual</label>
+            <select onchange="onUbicacionTypeChange(this)">
+              <option value="panol">Pañol Central</option>
+              <option value="taller">Taller Central</option>
+              <option value="aeropuerto">Aeropuerto…</option>
+            </select>
+          </div>
+          <div class="field" id="ubicacion-aeropuerto-field" style="max-width:none; display:none;">
+            <label>Aeropuerto</label>
+            <select>
+              <option>EZE — Ministro Pistarini</option>
+              <option>AEP — Jorge Newbery</option>
+              <option>COR — Ingeniero Taravella</option>
+              <option>MDZ — El Plumerillo</option>
+              <option>BRC — Bariloche</option>
+              <option>RGL — Río Gallegos</option>
+            </select>
+          </div>
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Estado físico</label>
+            <select>
+              <option>En servicio</option>
+              <option>Fuera de servicio</option>
+              <option>Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar artículo</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ MOVIMIENTO NUEVO -->
+      <section class="screen" id="screen-movimiento-nuevo">
+        <div class="back-link" onclick="goBack()">‹ Movimientos</div>
+        <h2 style="font-size:22px; margin-bottom:4px;">Nuevo movimiento</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin:0 0 20px;">Movimiento suelto, sin comisión asociada — requiere un técnico responsable.</p>
+
+        <div class="card form-page" style="max-width:520px;">
+          <div class="field" style="max-width:none;">
+            <label>Artículos <span style="text-transform:none; font-weight:400; color:var(--text-faint);">— un movimiento puede mover varios a la vez</span></label>
+            <div class="multiselect" data-pool="articles" data-ms="movimiento-articulos">
+              <input type="text" class="ms-search" placeholder="Buscar por N° de activo o descripción…" oninput="msFilter(this)" onfocus="msFilter(this)">
+              <div class="ms-results"></div>
+              <div class="ms-selected"></div>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="field" style="max-width:none;">
+              <label>Origen</label>
+              <select>
+                <option>Pañol Central</option>
+                <option>Taller Central</option>
+                <option>EZE</option>
+                <option>AEP</option>
+              </select>
+            </div>
+            <div class="field" style="max-width:none;">
+              <label>Destino</label>
+              <select>
+                <option>Taller Central</option>
+                <option>Pañol Central</option>
+                <option>EZE</option>
+                <option>AEP</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="max-width:none;">
+            <label>Contexto</label>
+            <div class="seg" style="width:fit-content;">
+              <button class="sel-no on" onclick="onMovimientoContextChange(this,'tecnico')">Sin comisión</button>
+              <button class="sel-yes" onclick="onMovimientoContextChange(this,'comision')">Con comisión</button>
+            </div>
+          </div>
+
+          <div class="field" id="movimiento-tecnico-field" style="max-width:none;">
+            <label>Técnico responsable <span style="text-transform:none; font-weight:400; color:var(--warn);">(obligatorio sin comisión)</span></label>
+            <select>
+              <option>Juan Ibarra</option>
+              <option>Marina Paz</option>
+              <option>Roberto Sosa</option>
+            </select>
+          </div>
+          <div class="field" id="movimiento-comision-field" style="max-width:none; display:none;">
+            <label>Comisión</label>
+            <select>
+              <option>COM-0148 — EZE, AEP (en curso)</option>
+              <option>COM-0151 — BRC (planificada)</option>
+            </select>
+          </div>
+
+          <div class="field" style="max-width:none; margin-bottom:0;">
+            <label>Notas</label>
+            <textarea rows="3" placeholder="Motivo del movimiento…"></textarea>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:18px;">
+          <button class="btn primary" onclick="goBack()">Guardar movimiento</button>
+          <button class="btn ghost" onclick="goBack()">Cancelar</button>
+        </div>
+      </section>
+      <section class="screen" id="screen-articulo-detalle">
+        <div class="back-link" onclick="goBack()">‹ Artículos</div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">HER-00042 <span class="pill ok"><span class="dot"></span>En servicio</span></div>
+          <div class="grid grid-3">
+            <div class="kv"><span class="k">Tipo</span><span class="v">Herramienta</span></div>
+            <div class="kv"><span class="k">N° Serie</span><span class="v mono">SN-88213</span></div>
+            <div class="kv"><span class="k">Vence calibración</span><span class="v mono">15/01/2027</span></div>
+          </div>
+        </div>
+        <div class="section-title">Historial <small style="font-weight:400; color:var(--text-faint);">movimientos y cambios de estado, con el estado del artículo en ese momento</small></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Fecha</th><th>Evento</th><th>Detalle</th><th>Estado en ese momento</th></tr>
+              <tr>
+                <td class="mono">04/08/2026</td>
+                <td><span class="pill-event mov"><span class="dot"></span>Movimiento</span></td>
+                <td class="mono">EZE → Pañol Central <span style="color:var(--text-faint);">· COM-0140</span></td>
+                <td><span class="pill ok"><span class="dot"></span>En servicio</span></td>
+              </tr>
+              <tr>
+                <td class="mono">01/08/2026</td>
+                <td><span class="pill-event mov"><span class="dot"></span>Movimiento</span></td>
+                <td class="mono">Pañol Central → RGL <span style="color:var(--text-faint);">· COM-0140</span></td>
+                <td><span class="pill ok"><span class="dot"></span>En servicio</span></td>
+              </tr>
+              <tr>
+                <td class="mono">15/07/2026</td>
+                <td><span class="pill-event status"><span class="dot"></span>Cambio de estado</span></td>
+                <td>Fuera de servicio → En servicio <span style="color:var(--text-faint);">· reparada, edición manual por M. Paz</span></td>
+                <td><span class="pill ok"><span class="dot"></span>En servicio</span></td>
+              </tr>
+              <tr>
+                <td class="mono">10/07/2026</td>
+                <td><span class="pill-event status"><span class="dot"></span>Cambio de estado</span></td>
+                <td>En servicio → Fuera de servicio <span style="color:var(--text-faint);">· carcasa rota, edición manual por M. Paz</span></td>
+                <td><span class="pill warn"><span class="dot"></span>Fuera de servicio</span></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ MOVIMIENTOS -->
+      <section class="screen" id="screen-movimientos">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">Historial completo de trazabilidad — cada movimiento actualiza la ubicación actual del artículo.</div>
+          <button class="btn primary" onclick="showScreen('movimiento-nuevo')">+ Nuevo movimiento</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Fecha</th><th>Artículos</th><th>Origen</th><th>Destino</th><th>Comisión</th><th></th></tr>
+              <tr class="clickable" onclick="showScreen('movimiento-detalle')">
+                <td class="mono">14/09/2026</td>
+                <td><span class="pill neutral"><span class="dot"></span>4 artículos</span></td>
+                <td>Pañol Central</td><td class="mono">EZE</td><td class="mono">COM-0148</td><td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">04/08/2026</td>
+                <td class="mono">HER-00042</td>
+                <td class="mono">EZE</td><td>Pañol Central</td><td class="mono">COM-0140</td><td>›</td>
+              </tr>
+              <tr class="clickable">
+                <td class="mono">22/07/2026</td>
+                <td class="mono">ART-00398</td>
+                <td>Taller Central</td><td>Pañol Central</td><td>—</td><td>›</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ MANTENIMIENTO -->
+      <section class="screen" id="screen-mantenimiento">
+        <div class="tabs">
+          <div class="tab active">Próximos vencimientos</div>
+          <div class="tab">Historial</div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Equipo</th><th>Aeropuerto</th><th>Tipo</th><th>Último realizado</th><th>Vence</th><th></th></tr>
+              <tr><td>ILS-07 RWY13</td><td class="mono">EZE</td><td><span class="pill accent"><span class="dot"></span>Verificación aérea</span></td><td class="mono">22/09/2025</td><td class="mono">22/09/2026</td><td class="num warn">7 días</td></tr>
+              <tr><td>VOR MDZ</td><td class="mono">MDZ</td><td><span class="pill neutral"><span class="dot"></span>Preventivo anual</span></td><td class="mono">29/09/2025</td><td class="mono">29/09/2026</td><td class="num warn">14 días</td></tr>
+              <tr><td>DME BRC</td><td class="mono">BRC</td><td><span class="pill accent"><span class="dot"></span>Verificación aérea</span></td><td class="mono">03/10/2025</td><td class="mono">03/10/2026</td><td class="num">18 días</td></tr>
+              <tr><td>VOR RGL</td><td class="mono">RGL</td><td><span class="pill neutral"><span class="dot"></span>Preventivo mensual</span></td><td class="mono">15/08/2026</td><td class="mono">15/09/2026</td><td class="num crit">Vencido</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ TICKETS -->
+      <section class="screen" id="screen-tickets">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="tabs" style="border:none; margin:0;">
+            <div class="tab active">Todos</div>
+            <div class="tab">Pendientes</div>
+            <div class="tab">En progreso</div>
+            <div class="tab">Resueltos</div>
+          </div>
+          <button class="btn primary">+ Tarea pendiente</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Equipo</th><th>Descripción</th><th>Reportado por</th><th>Fecha</th><th>Estado</th></tr>
+              <tr><td>ILS-07 RWY13</td><td>Ruido en la señal de glide slope (Tx2)</td><td>J. Ibarra</td><td class="mono">10/09/2026</td><td><span class="pill warn"><span class="dot"></span>Pendiente</span></td></tr>
+              <tr><td>ILS-07 RWY13</td><td>Revisar fijación de antena localizer</td><td>M. Paz</td><td class="mono">08/09/2026</td><td><span class="pill neutral"><span class="dot"></span>En progreso</span></td></tr>
+              <tr><td>VOR RGL</td><td>Ruido de fondo en receptor de control</td><td>R. Sosa</td><td class="mono">30/08/2026</td><td><span class="pill ok"><span class="dot"></span>Resuelto</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ TÉCNICOS -->
+      <section class="screen" id="screen-tecnicos">
+        <div class="btn-row" style="justify-content:space-between; margin-bottom:16px;">
+          <div class="role-note" style="max-width:none;">CRUD de técnicos + rol de acceso en app_users.</div>
+          <button class="btn primary">+ Nuevo técnico</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Nombre</th><th>DNI</th><th>Mail</th><th>Rol</th><th>Comisiones activas</th></tr>
+              <tr><td class="name-cell"><div class="avatar">JI</div>J. Ibarra</td><td class="mono">28.441.902</td><td class="mono">jibarra@anac.gob.ar</td><td><span class="pill accent"><span class="dot"></span>Técnico</span></td><td class="num">1</td></tr>
+              <tr><td class="name-cell"><div class="avatar">MP</div>M. Paz</td><td class="mono">31.208.774</td><td class="mono">mpaz@anac.gob.ar</td><td><span class="pill accent"><span class="dot"></span>Técnico</span></td><td class="num">1</td></tr>
+              <tr><td class="name-cell"><div class="avatar">RS</div>R. Sosa</td><td class="mono">29.887.410</td><td class="mono">rsosa@anac.gob.ar</td><td><span class="pill neutral"><span class="dot"></span>Dev</span></td><td class="num">0</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ AUDITORÍA -->
+      <section class="screen" id="screen-auditoria">
+        <div class="role-note" style="max-width:none; margin-bottom:16px;">Solo Admin/Dev. Registro invisible de acciones críticas.</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>IP</th></tr>
+              <tr><td class="mono">15/09/2026 20:41</td><td>F. Robles</td><td>rpc_close_commission</td><td class="mono">COM-0146</td><td class="mono">190.183.4.12</td></tr>
+              <tr><td class="mono">14/09/2026 11:02</td><td>J. Ibarra</td><td>rpc_set_transmitter_status</td><td class="mono">Tx1 · ILS-07</td><td class="mono">201.245.9.201</td></tr>
+              <tr><td class="mono">01/09/2026 08:15</td><td>M. Paz</td><td>update commissions</td><td class="mono">COM-0146</td><td class="mono">201.245.9.201</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item[data-screen]');
+  const screens = document.querySelectorAll('.screen');
+  const crumbsEl = document.getElementById('crumbs');
+  const titleEl = document.getElementById('page-title');
+
+  const meta = {
+    dashboard: ['General', 'Dashboard'],
+    aeropuertos: ['Infraestructura', 'Aeropuertos'],
+    'aeropuerto-nuevo': ['Infraestructura · Aeropuertos', 'Nuevo aeropuerto'],
+    'aeropuerto-detalle': ['Infraestructura · Aeropuertos', 'EZE — Ministro Pistarini'],
+    'equipo-nuevo': ['Infraestructura · EZE', 'Nuevo equipo instalado'],
+    'equipo-detalle': ['Infraestructura · EZE', 'ILS-07 RWY13'],
+    catalogo: ['Infraestructura', 'Catálogo de modelos'],
+    'modelo-detalle': ['Infraestructura · Catálogo de modelos', 'Thales 420'],
+    'modelo-nuevo': ['Infraestructura · Catálogo de modelos', 'Nuevo modelo'],
+    comisiones: ['Logística', 'Comisiones'],
+    'comision-nueva': ['Logística · Comisiones', 'Nueva comisión'],
+    'comision-detalle': ['Logística · Comisiones', 'COM-0148'],
+    'tecnico-detalle': ['Logística · Comisiones · COM-0148', 'Juan Ibarra'],
+    'cierre-wizard': ['Logística · Comisiones · COM-0148', 'Asistente de cierre'],
+    vehiculos: ['Logística', 'Vehículos'],
+    'vehiculo-nuevo': ['Logística · Vehículos', 'Nuevo vehículo'],
+    inventario: ['Inventario', 'Artículos'],
+    'articulo-detalle': ['Inventario · Artículos', 'HER-00042'],
+    'articulo-nuevo': ['Inventario · Artículos', 'Nuevo artículo'],
+    movimientos: ['Inventario', 'Movimientos'],
+    'movimiento-detalle': ['Inventario · Movimientos', 'MOV-01942'],
+    'movimiento-nuevo': ['Inventario · Movimientos', 'Nuevo movimiento'],
+    mantenimiento: ['Trabajo diario', 'Mantenimiento'],
+    tickets: ['Trabajo diario', 'Tickets'],
+    tecnicos: ['Administración', 'Técnicos'],
+    auditoria: ['Administración', 'Auditoría'],
+  };
+
+  // ---- navigation history: the back button always works, from any screen ----
+  let currentScreenId = 'comisiones';
+  let screenHistory = [];
+
+  function showScreen(id, opts){
+    opts = opts || {};
+    if(!opts.fromBack && id !== currentScreenId){
+      screenHistory.push(currentScreenId);
+    }
+    currentScreenId = id;
+
+    screens.forEach(s => s.classList.toggle('active', s.id === 'screen-' + id));
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.screen === id));
+    if(meta[id]){
+      crumbsEl.textContent = meta[id][0];
+      titleEl.textContent = meta[id][1];
+    }
+    document.getElementById('rail').classList.remove('open');
+    document.getElementById('rail-backdrop').classList.remove('open');
+    document.getElementById('btn-back').disabled = screenHistory.length === 0;
+    window.scrollTo(0,0);
+  }
+
+  function toggleRail(){
+    document.getElementById('rail').classList.toggle('open');
+    document.getElementById('rail-backdrop').classList.toggle('open');
+  }
+
+  function goBack(){
+    if(screenHistory.length === 0) return;
+    const prev = screenHistory.pop();
+    showScreen(prev, {fromBack:true});
+    document.getElementById('btn-back').disabled = screenHistory.length === 0;
+  }
+
+  navItems.forEach(n => n.addEventListener('click', () => {
+    if(n.classList.contains('locked')) return;
+    showScreen(n.dataset.screen);
+  }));
+
+  // ---- Wizard step navigation ----
+  let currentWStep = 2;
+  function paintWizard(){
+    document.querySelectorAll('.wstep').forEach(w => w.classList.toggle('active', +w.dataset.step === currentWStep));
+    document.querySelectorAll('.step').forEach(s => {
+      const n = +s.dataset.wstep;
+      s.classList.toggle('done', n < currentWStep);
+      s.classList.toggle('current', n === currentWStep);
+    });
+  }
+  function wizardNav(dir){
+    currentWStep = Math.min(4, Math.max(1, currentWStep + dir));
+    paintWizard();
+  }
+  paintWizard();
+
+  // ---- segmented controls (delegated so dynamically-added tareas work too) ----
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.seg button');
+    if(!btn) return;
+    btn.closest('.seg').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+
+  // ---- wizard step 2: agregar tarea a un equipo ----
+  function addTareaRow(btn){
+    const block = btn.closest('.equipo-block');
+    const emptyMsg = block.querySelector('.empty');
+    if(emptyMsg) emptyMsg.remove();
+    const row = document.createElement('div');
+    row.className = 'tarea-row';
+    row.innerHTML = `
+      <div class="field"><label>Tipo de tarea</label>
+        <select onchange="toggleAlarmField(this)">
+          <option>Preventivo mensual</option>
+          <option>Preventivo trimestral</option>
+          <option>Preventivo semestral</option>
+          <option>Preventivo anual</option>
+          <option>Correctivo</option>
+          <option value="verif">Verificación aérea</option>
+        </select>
+      </div>
+      <div class="field"><label>Fecha</label><input type="date" value="2026-09-18"></div>
+      <div class="field"><label>Comentario</label><input type="text" placeholder="Observaciones de la tarea…"></div>
+      <button class="tarea-remove" onclick="this.closest('.tarea-row').remove()">✕</button>
+    `;
+    block.appendChild(row);
+  }
+
+  function toggleAlarmField(select){
+    const field = select.closest('.field');
+    let toggle = field.querySelector('.alarm-toggle');
+    if(select.value === 'verif'){
+      if(!toggle){
+        toggle = document.createElement('div');
+        toggle.className = 'alarm-toggle';
+        toggle.innerHTML = '<div class="seg"><button class="sel-no on">Sin alarmas</button><button class="sel-yes">Con alarmas</button></div>';
+        field.appendChild(toggle);
+      }
+    } else if(toggle){
+      toggle.remove();
+    }
+  }
+
+  // ---- tabs (visual only) ----
+  document.querySelectorAll('.tabs').forEach(tabgroup => {
+    tabgroup.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabgroup.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  });
+
+  // ---- nuevo artículo: herramienta vs repuesto ----
+  function onArticuloKindChange(btn, kind){
+    document.getElementById('herramienta-fields').style.display = kind === 'herramienta' ? 'block' : 'none';
+    document.getElementById('repuesto-fields').style.display = kind === 'repuesto' ? 'block' : 'none';
+  }
+
+  // ---- nuevo artículo: mostrar selector de aeropuerto solo si la ubicación lo requiere ----
+  function onUbicacionTypeChange(select){
+    document.getElementById('ubicacion-aeropuerto-field').style.display =
+      select.value === 'aeropuerto' ? 'flex' : 'none';
+  }
+
+  // ---- nuevo movimiento suelto: comisión O técnico responsable ----
+  function onMovimientoContextChange(btn, context){
+    document.getElementById('movimiento-tecnico-field').style.display = context === 'tecnico' ? 'flex' : 'none';
+    document.getElementById('movimiento-comision-field').style.display = context === 'comision' ? 'flex' : 'none';
+  }
+
+  // ---- nuevo equipo instalado: DME obligatorio para ILS, opcional para VOR ----
+  function onSistemaPrincipalChange(select){
+    const tipo = select.selectedOptions[0].dataset.tipo;
+    const label = document.getElementById('dme-label');
+    if(tipo === 'ILS'){
+      label.innerHTML = 'DME asociado <span style="text-transform:none; font-weight:400; color:var(--warn);">(obligatorio — todo ILS lleva su DME)</span>';
+    } else {
+      label.innerHTML = 'DME asociado <span style="text-transform:none; font-weight:400; color:var(--text-faint);">(opcional para un VOR)</span>';
+    }
+  }
+
+  // ---- search-to-add multiselect (destinos / técnicos / etc.) ----
+  const msData = {
+    airports: [
+      {id:'EZE', label:'EZE — Ministro Pistarini'},
+      {id:'AEP', label:'AEP — Jorge Newbery'},
+      {id:'COR', label:'COR — Ingeniero Taravella'},
+      {id:'MDZ', label:'MDZ — El Plumerillo'},
+      {id:'BRC', label:'BRC — Bariloche'},
+      {id:'RGL', label:'RGL — Río Gallegos'},
+    ],
+    technicians: [
+      {id:'JI', label:'Juan Ibarra'},
+      {id:'MP', label:'Marina Paz'},
+      {id:'RS', label:'Roberto Sosa', hint:'ya asignado a otra comisión'},
+    ],
+    articles: [
+      {id:'HER-00042', label:'HER-00042 — Analizador de espectro portátil'},
+      {id:'HER-00019', label:'HER-00019 — Set de torque calibrado'},
+      {id:'RPT-00231', label:'RPT-00231 — Módulo RF Thales 420'},
+      {id:'RPT-00287', label:'RPT-00287 — Fuente de alimentación D420'},
+      {id:'ART-00551', label:'ART-00551 — Unidad ILS (reemplazada por falla)'},
+      {id:'ART-00398', label:'ART-00398 — Antena localizer dañada'},
+    ],
+  };
+  const msState = {};
+
+  function msInit(widget, poolKey, preselected){
+    msState[widget.dataset.ms] = new Set(preselected || []);
+    msRenderSelected(widget, poolKey);
+  }
+
+  function msFilter(input){
+    const widget = input.closest('.multiselect');
+    const poolKey = widget.dataset.pool;
+    const wid = widget.dataset.ms;
+    const query = input.value.trim().toLowerCase();
+    const results = widget.querySelector('.ms-results');
+    const pool = msData[poolKey].filter(it => !msState[wid].has(it.id));
+    const items = query ? pool.filter(it => it.label.toLowerCase().includes(query)) : pool;
+
+    results.innerHTML = '';
+    if(items.length === 0){
+      results.innerHTML = '<div class="ms-empty">Sin resultados</div>';
+    } else {
+      items.slice(0, 6).forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'ms-result-row';
+        row.innerHTML = '<span>' + it.label + '</span>' +
+          (it.hint ? '<span class="pill warn" style="flex:none;"><span class="dot"></span>' + it.hint + '</span>' : '');
+        row.addEventListener('click', () => {
+          msState[wid].add(it.id);
+          msRenderSelected(widget, poolKey);
+          input.value = '';
+          results.classList.remove('open');
+          input.focus();
+        });
+        results.appendChild(row);
+      });
+    }
+    results.classList.add('open');
+  }
+
+  function msRenderSelected(widget, poolKey){
+    const wid = widget.dataset.ms;
+    const selected = widget.querySelector('.ms-selected');
+    selected.innerHTML = '';
+    msState[wid].forEach(itemId => {
+      const it = msData[poolKey].find(x => x.id === itemId);
+      const row = document.createElement('div');
+      row.className = 'ms-selected-row';
+      row.innerHTML = '<span>' + it.label + '</span><button type="button" class="ms-remove" title="Quitar">✕</button>';
+      row.querySelector('.ms-remove').addEventListener('click', () => {
+        msState[wid].delete(itemId);
+        msRenderSelected(widget, poolKey);
+      });
+      selected.appendChild(row);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('.multiselect')){
+      document.querySelectorAll('.ms-results.open').forEach(r => r.classList.remove('open'));
+    }
+  });
+
+  document.querySelectorAll('.multiselect').forEach(w => {
+    const preselected = w.dataset.ms === 'destinos' ? ['EZE','AEP']
+      : w.dataset.ms === 'tecnicos' ? ['JI','MP']
+      : w.dataset.ms === 'movimiento-articulos' ? ['RPT-00231','RPT-00287']
+      : [];
+    msInit(w, w.dataset.pool, preselected);
+  });
+
+  // ---- role switch demo ----
+  const roleSelect = document.getElementById('role-select');
+  const roleNote = document.getElementById('role-note');
+  const navAuditoria = document.getElementById('nav-auditoria');
+  const banner = document.getElementById('tecnico-otro-banner');
+  const btnCierre = document.getElementById('btn-abrir-cierre');
+
+  const roleCopy = {
+    admin: 'Viendo como <b>Admin</b> — acceso total.',
+    dev: 'Viendo como <b>Dev</b> — acceso total + configuración técnica.',
+    'tecnico-asignado': 'Viendo como <b>Técnico</b> — asignado a COM-0148, puede operar el cierre.',
+    'tecnico-otro': 'Viendo como <b>Técnico</b> — sin asignar a COM-0148, solo lectura.',
+  };
+
+  roleSelect.addEventListener('change', () => {
+    const val = roleSelect.value;
+    roleNote.innerHTML = roleCopy[val];
+    const isTecnico = val.startsWith('tecnico');
+    navAuditoria.classList.toggle('locked', isTecnico);
+    const isOtro = val === 'tecnico-otro';
+    banner.style.display = isOtro ? 'flex' : 'none';
+    if(btnCierre) btnCierre.disabled = isOtro;
+  });
+</script>
