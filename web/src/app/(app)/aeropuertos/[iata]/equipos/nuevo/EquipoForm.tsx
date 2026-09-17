@@ -23,6 +23,7 @@ export function EquipoForm({
   const [mainModelId, setMainModelId] = useState(mainModels[0]?.id ?? "");
   const mainModel = mainModels.find((m) => m.id === mainModelId);
   const dmeRequired = mainModel?.type === "ILS";
+  const [includeDme, setIncludeDme] = useState(dmeRequired);
 
   return (
     <form action={formAction} className="card form-page" style={{ maxWidth: 520 }}>
@@ -39,7 +40,11 @@ export function EquipoForm({
           id="catalog_model_id"
           name="catalog_model_id"
           value={mainModelId}
-          onChange={(e) => setMainModelId(e.target.value)}
+          onChange={(e) => {
+            setMainModelId(e.target.value);
+            const type = mainModels.find((m) => m.id === e.target.value)?.type;
+            if (type === "ILS") setIncludeDme(true);
+          }}
           required
         >
           {mainModels.map((m) => (
@@ -51,27 +56,60 @@ export function EquipoForm({
       </div>
 
       <div className="field" style={{ maxWidth: "none" }}>
-        <label htmlFor="dme_catalog_model_id">
-          DME asociado{" "}
-          {dmeRequired ? (
-            <span style={{ textTransform: "none", fontWeight: 400, color: "var(--warn)" }}>
-              (obligatorio — todo ILS lleva su DME)
-            </span>
-          ) : (
-            <span style={{ textTransform: "none", fontWeight: 400, color: "var(--text-faint)" }}>
-              (opcional para un VOR)
-            </span>
-          )}
-        </label>
-        <select id="dme_catalog_model_id" name="dme_catalog_model_id" required={dmeRequired} defaultValue="">
-          {!dmeRequired && <option value="">Sin DME asociado</option>}
-          {dmeModels.map((m) => (
-            <option key={m.id} value={m.id}>
-              DME — {m.brand} {m.model}
-            </option>
-          ))}
+        <label htmlFor="aerial_verification_frequency_months">Frecuencia de verificación aérea de este equipo</label>
+        <select id="aerial_verification_frequency_months" name="aerial_verification_frequency_months" required defaultValue="6">
+          <option value="6">Cada 6 meses</option>
+          <option value="12">Cada 12 meses</option>
         </select>
       </div>
+
+      {!dmeRequired && (
+        <div className="field" style={{ maxWidth: "none" }}>
+          <label>DME asociado</label>
+          <div className="seg" style={{ width: "fit-content" }}>
+            <button type="button" className={`sel-yes${includeDme ? " on" : ""}`} onClick={() => setIncludeDme(true)}>
+              Con DME
+            </button>
+            <button type="button" className={`sel-no${!includeDme ? " on" : ""}`} onClick={() => setIncludeDme(false)}>
+              Sin DME
+            </button>
+          </div>
+        </div>
+      )}
+
+      {includeDme && (
+        <>
+          <div className="field" style={{ maxWidth: "none" }}>
+            <label htmlFor="dme_catalog_model_id">
+              Modelo del DME{" "}
+              {dmeRequired ? (
+                <span style={{ textTransform: "none", fontWeight: 400, color: "var(--warn)" }}>
+                  (obligatorio — todo ILS lleva su DME)
+                </span>
+              ) : null}
+            </label>
+            <select id="dme_catalog_model_id" name="dme_catalog_model_id" required>
+              {dmeModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  DME — {m.brand} {m.model}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field" style={{ maxWidth: "none" }}>
+            <label htmlFor="dme_aerial_verification_frequency_months">Frecuencia de verificación aérea del DME</label>
+            <select
+              id="dme_aerial_verification_frequency_months"
+              name="dme_aerial_verification_frequency_months"
+              required
+              defaultValue="6"
+            >
+              <option value="6">Cada 6 meses</option>
+              <option value="12">Cada 12 meses</option>
+            </select>
+          </div>
+        </>
+      )}
 
       <div className="field" style={{ maxWidth: "none", marginBottom: 0 }}>
         <label htmlFor="installed_at">Fecha de instalación</label>

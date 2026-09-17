@@ -19,7 +19,6 @@ export async function createArticulo(
   const physicalStatus = String(formData.get("physical_status") ?? "en_servicio") as Database["public"]["Enums"]["article_physical_status"];
 
   const toolType = String(formData.get("tool_type") ?? "").trim() || null;
-  const calibrationDueDate = String(formData.get("calibration_due_date") ?? "").trim() || null;
   const spareType = String(formData.get("spare_type") ?? "").trim() || null;
   const catalogModelId = String(formData.get("catalog_model_id") ?? "").trim() || null;
 
@@ -37,7 +36,6 @@ export async function createArticulo(
     p_location_airport: (locationType === "aeropuerto" ? locationAirport : null) ?? undefined,
     p_physical_status: physicalStatus,
     p_tool_type: (kind === "herramienta" ? toolType : null) ?? undefined,
-    p_calibration_due_date: (kind === "herramienta" ? calibrationDueDate : null) ?? undefined,
     p_spare_type: (kind === "repuesto" ? spareType : null) ?? undefined,
     p_catalog_model_id: (kind === "repuesto" ? catalogModelId : null) ?? undefined,
   });

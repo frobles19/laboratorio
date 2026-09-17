@@ -45,7 +45,6 @@ export default async function CatalogoPage() {
               <tr>
                 <th>Tipo</th>
                 <th>Marca / Modelo</th>
-                <th>Verif. aérea</th>
                 <th>Instalados en el país</th>
                 <th></th>
               </tr>
@@ -64,7 +63,6 @@ export default async function CatalogoPage() {
                       {m.brand} {m.model}
                     </Link>
                   </td>
-                  <td className="num">{m.aerial_verification_frequency_months} meses</td>
                   <td className="num">{installedByModel.get(m.id) ?? 0}</td>
                   <td>
                     <Link href={`/catalogo/${m.id}`} style={{ color: "inherit" }}>
@@ -75,7 +73,7 @@ export default async function CatalogoPage() {
               ))}
               {(!models || models.length === 0) && (
                 <tr>
-                  <td colSpan={5} className="empty">
+                  <td colSpan={4} className="empty">
                     No hay modelos cargados todavía.
                   </td>
                 </tr>

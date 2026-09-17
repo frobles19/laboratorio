@@ -59,7 +59,7 @@
   }
   .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
   h1,h2,h3{font-family:"Big Shoulders Display","Work Sans",sans-serif; text-wrap:balance; letter-spacing:.01em; margin:0;}
-  a{color:var(--accent);}
+  a{color:var(--accent); text-decoration:none;}
   button{font-family:inherit; font-size:inherit;}
   ::selection{background:var(--accent-dim);}
 

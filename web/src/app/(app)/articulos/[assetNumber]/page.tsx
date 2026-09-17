@@ -36,7 +36,7 @@ export default async function ArticuloDetallePage({
 
   const { data: article } = await supabase
     .from("articles")
-    .select("*, tools(tool_type, calibration_due_date), spare_parts(spare_type, model_catalog(brand, model, type))")
+    .select("*, tools(tool_type), spare_parts(spare_type, model_catalog(brand, model, type))")
     .eq("asset_number", assetNumber)
     .maybeSingle();
 
@@ -75,7 +75,7 @@ export default async function ArticuloDetallePage({
   ].sort((a, b) => (a.at < b.at ? 1 : -1));
 
   const status = STATUS_PILL[article.physical_status] ?? STATUS_PILL.en_servicio;
-  const tool = article.tools as unknown as { tool_type: string; calibration_due_date: string | null } | null;
+  const tool = article.tools as unknown as { tool_type: string } | null;
   const sparePart = article.spare_parts as unknown as {
     spare_type: string;
     model_catalog: { brand: string; model: string; type: string } | null;
@@ -109,16 +109,10 @@ export default async function ArticuloDetallePage({
             <span className="v mono">{locationLabel(article.current_location_type, article.current_location_airport)}</span>
           </div>
           {tool && (
-            <>
-              <div className="kv">
-                <span className="k">Tipo de herramienta</span>
-                <span className="v">{tool.tool_type}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Vence calibración</span>
-                <span className="v mono">{tool.calibration_due_date ?? "—"}</span>
-              </div>
-            </>
+            <div className="kv">
+              <span className="k">Tipo de herramienta</span>
+              <span className="v">{tool.tool_type}</span>
+            </div>
           )}
           {sparePart && (
             <>

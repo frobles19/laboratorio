@@ -59,16 +59,10 @@ export function ArticuloForm({
       </div>
 
       {kind === "herramienta" ? (
-        <>
-          <div className="field" style={{ maxWidth: "none" }}>
-            <label htmlFor="tool_type">Tipo de herramienta</label>
-            <input id="tool_type" name="tool_type" type="text" placeholder="Instrumento de medición" required />
-          </div>
-          <div className="field" style={{ maxWidth: "none" }}>
-            <label htmlFor="calibration_due_date">Vencimiento de calibración</label>
-            <input id="calibration_due_date" name="calibration_due_date" type="date" required />
-          </div>
-        </>
+        <div className="field" style={{ maxWidth: "none" }}>
+          <label htmlFor="tool_type">Tipo de herramienta</label>
+          <input id="tool_type" name="tool_type" type="text" placeholder="Instrumento de medición" required />
+        </div>
       ) : (
         <>
           <div className="field" style={{ maxWidth: "none" }}>

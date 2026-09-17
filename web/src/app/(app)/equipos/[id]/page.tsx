@@ -23,7 +23,7 @@ export default async function EquipoDetallePage({ params }: { params: Promise<{ 
   const { data: equipment } = await supabase
     .from("installed_equipment")
     .select(
-      "id, airport_iata, installed_at, current_status, model_catalog(brand, model, type, preventive_frequency_months, aerial_verification_frequency_months), transmitters(id, label, status)"
+      "id, airport_iata, installed_at, current_status, aerial_verification_frequency_months, model_catalog(brand, model, type, preventive_frequency_months), transmitters(id, label, status)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -35,7 +35,6 @@ export default async function EquipoDetallePage({ params }: { params: Promise<{ 
     model: string;
     type: string;
     preventive_frequency_months: number;
-    aerial_verification_frequency_months: number;
   };
 
   const [{ data: history }, { data: tickets }, { data: lastVerification }, { data: lastPreventive }] =
@@ -165,7 +164,9 @@ export default async function EquipoDetallePage({ params }: { params: Promise<{ 
 
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="card-title">Verificación aérea</div>
+            <div className="card-title">
+              Verificación aérea <small>frecuencia: {equipment.aerial_verification_frequency_months} meses</small>
+            </div>
             <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="kv">
                 <span className="k">Última realizada</span>

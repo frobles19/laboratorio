@@ -26,19 +26,12 @@ export default function NuevoModeloPage() {
           <label htmlFor="model">Modelo</label>
           <input id="model" name="model" type="text" placeholder="420" required />
         </div>
-        <div className="field" style={{ maxWidth: "none" }}>
+        <div className="field" style={{ maxWidth: "none", marginBottom: 0 }}>
           <label htmlFor="type">Tipo de equipo</label>
           <select id="type" name="type" required defaultValue="ILS">
             <option value="ILS">ILS</option>
             <option value="VOR">VOR</option>
             <option value="DME">DME</option>
-          </select>
-        </div>
-        <div className="field" style={{ maxWidth: "none", marginBottom: 0 }}>
-          <label htmlFor="aerial_verification_frequency_months">Frecuencia de verificación aérea exigida</label>
-          <select id="aerial_verification_frequency_months" name="aerial_verification_frequency_months" required defaultValue="6">
-            <option value="6">Cada 6 meses</option>
-            <option value="12">Cada 12 meses</option>
           </select>
         </div>
 

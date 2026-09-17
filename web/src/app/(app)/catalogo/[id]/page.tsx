@@ -25,7 +25,7 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
 
   const { data: equipment } = await supabase
     .from("installed_equipment")
-    .select("id, airport_iata, current_status, transmitters(label, status)")
+    .select("id, airport_iata, current_status, aerial_verification_frequency_months, transmitters(label, status)")
     .eq("catalog_model_id", id);
 
   const total = equipment?.length ?? 0;
@@ -46,10 +46,6 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
           </span>
         </div>
         <div className="grid grid-3">
-          <div className="kv">
-            <span className="k">Verificación aérea exigida</span>
-            <span className="v">cada {model.aerial_verification_frequency_months} meses</span>
-          </div>
           <div className="kv">
             <span className="k">Preventivo base</span>
             <span className="v">cada {model.preventive_frequency_months} meses</span>
@@ -79,6 +75,7 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
                 <th>Tx1</th>
                 <th>Tx2</th>
                 <th>Estado</th>
+                <th>Verif. aérea</th>
                 <th></th>
               </tr>
               {(equipment ?? []).map((eq) => {
@@ -119,6 +116,7 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
                         {status.label}
                       </span>
                     </td>
+                    <td className="num">{eq.aerial_verification_frequency_months} meses</td>
                     <td>
                       <Link href={`/equipos/${eq.id}`} style={{ color: "inherit" }}>
                         ›
@@ -129,7 +127,7 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
               })}
               {(!equipment || equipment.length === 0) && (
                 <tr>
-                  <td colSpan={5} className="empty">
+                  <td colSpan={6} className="empty">
                     Todavía no hay equipos instalados de este modelo.
                   </td>
                 </tr>

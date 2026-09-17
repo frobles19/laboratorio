@@ -338,6 +338,7 @@ export type Database = {
       }
       installed_equipment: {
         Row: {
+          aerial_verification_frequency_months: number
           airport_iata: string
           catalog_model_id: string
           created_at: string
@@ -347,6 +348,7 @@ export type Database = {
           parent_equipment_id: string | null
         }
         Insert: {
+          aerial_verification_frequency_months: number
           airport_iata: string
           catalog_model_id: string
           created_at?: string
@@ -356,6 +358,7 @@ export type Database = {
           parent_equipment_id?: string | null
         }
         Update: {
+          aerial_verification_frequency_months?: number
           airport_iata?: string
           catalog_model_id?: string
           created_at?: string
@@ -451,7 +454,6 @@ export type Database = {
       }
       model_catalog: {
         Row: {
-          aerial_verification_frequency_months: number
           brand: string
           created_at: string
           id: string
@@ -460,7 +462,6 @@ export type Database = {
           type: Database["public"]["Enums"]["equipment_type"]
         }
         Insert: {
-          aerial_verification_frequency_months: number
           brand: string
           created_at?: string
           id?: string
@@ -469,7 +470,6 @@ export type Database = {
           type: Database["public"]["Enums"]["equipment_type"]
         }
         Update: {
-          aerial_verification_frequency_months?: number
           brand?: string
           created_at?: string
           id?: string
@@ -773,17 +773,14 @@ export type Database = {
       tools: {
         Row: {
           asset_number: string
-          calibration_due_date: string
           tool_type: string
         }
         Insert: {
           asset_number: string
-          calibration_due_date: string
           tool_type: string
         }
         Update: {
           asset_number?: string
-          calibration_due_date?: string
           tool_type?: string
         }
         Relationships: [
@@ -900,7 +897,6 @@ export type Database = {
       rpc_create_article: {
         Args: {
           p_asset_number: string
-          p_calibration_due_date?: string
           p_catalog_model_id?: string
           p_kind: Database["public"]["Enums"]["article_kind"]
           p_location_airport?: string
@@ -925,8 +921,10 @@ export type Database = {
       }
       rpc_create_equipment: {
         Args: {
+          p_aerial_verification_frequency_months: number
           p_airport_iata: string
           p_catalog_model_id: string
+          p_dme_aerial_verification_frequency_months?: number
           p_dme_catalog_model_id?: string
           p_installed_at?: string
         }

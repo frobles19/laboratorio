@@ -10,9 +10,8 @@ export async function createModelo(_prevState: CreateModeloState, formData: Form
   const brand = String(formData.get("brand") ?? "").trim();
   const model = String(formData.get("model") ?? "").trim();
   const type = String(formData.get("type") ?? "") as Database["public"]["Enums"]["equipment_type"];
-  const aerialFrequency = Number(formData.get("aerial_verification_frequency_months"));
 
-  if (!brand || !model || !type || !aerialFrequency) {
+  if (!brand || !model || !type) {
     return { error: "Completá todos los campos." };
   }
 
@@ -21,7 +20,6 @@ export async function createModelo(_prevState: CreateModeloState, formData: Form
     brand,
     model,
     type,
-    aerial_verification_frequency_months: aerialFrequency,
   });
 
   if (error) {
