@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { createAeropuerto } from "./actions";
 
-const REGIONS = ["Buenos Aires", "Córdoba", "Cuyo", "Patagonia", "NOA", "NEA"];
+const REGIONS = ["EZEIZA", "CORDOBA", "COMODORO RIVADAVIA", "MENDOZA", "RESISTENCIA"];
 
 export default function NuevoAeropuertoPage() {
   const [state, formAction, pending] = useActionState(createAeropuerto, { error: null });
