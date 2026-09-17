@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { createComision } from "./actions";
+import { MultiSelect } from "@/components/MultiSelect";
 
 export function ComisionForm({
   airports,
@@ -64,26 +65,20 @@ export function ComisionForm({
         <div className="card-title">
           Destinos <small>aeropuertos a visitar</small>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-          {airports.map((a) => (
-            <label key={a.iata_code} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-              <input type="checkbox" name="airport_iatas" value={a.iata_code} />
-              <span className="mono">{a.iata_code}</span> — {a.name}
-            </label>
-          ))}
-        </div>
+        <MultiSelect
+          name="airport_iatas"
+          placeholder="Buscar por nombre o código IATA…"
+          items={airports.map((a) => ({ id: a.iata_code, label: `${a.iata_code} — ${a.name}` }))}
+        />
         <div className="divider"></div>
         <div className="card-title">
           Técnicos <small>cuadrilla asignada</small>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {technicians.map((t) => (
-            <label key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-              <input type="checkbox" name="technician_ids" value={t.id} />
-              {t.full_name}
-            </label>
-          ))}
-        </div>
+        <MultiSelect
+          name="technician_ids"
+          placeholder="Buscar técnico por nombre…"
+          items={technicians.map((t) => ({ id: t.id, label: t.full_name }))}
+        />
       </div>
 
       {state.error && (
