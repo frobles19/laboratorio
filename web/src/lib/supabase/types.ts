@@ -913,6 +913,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_create_commission: {
+        Args: {
+          p_airport_iatas: string[]
+          p_planned_arrival_date: string
+          p_planned_departure_date: string
+          p_technician_ids: string[]
+          p_vehicle_id?: string
+        }
+        Returns: string
+      }
       rpc_create_equipment: {
         Args: {
           p_airport_iata: string
