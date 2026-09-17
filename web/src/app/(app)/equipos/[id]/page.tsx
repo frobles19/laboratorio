@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteEquipo } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,7 @@ export default async function EquipoDetallePage({ params }: { params: Promise<{ 
   const { data: equipment } = await supabase
     .from("installed_equipment")
     .select(
-      "id, airport_iata, installed_at, current_status, aerial_verification_frequency_months, model_catalog(brand, model, type, preventive_frequency_months), transmitters(id, label, status)"
+      "id, airport_iata, current_status, aerial_verification_frequency_months, model_catalog(brand, model, type, preventive_frequency_months), transmitters(id, label, status)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -77,21 +79,32 @@ export default async function EquipoDetallePage({ params }: { params: Promise<{ 
       <div className="grid grid-2" style={{ alignItems: "start" }}>
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="card-title">
-              {model.brand} {model.model}{" "}
-              <span className={`pill ${status?.cls}`}>
-                <span className="dot"></span>
-                {status?.label}
-              </span>
+            <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div className="card-title">
+                {model.brand} {model.model}{" "}
+                <span className={`pill ${status?.cls}`}>
+                  <span className="dot"></span>
+                  {status?.label}
+                </span>
+              </div>
+              <div className="btn-row">
+                <Link href={`/equipos/${equipment.id}/editar`} className="btn small ghost">
+                  Editar
+                </Link>
+                <ConfirmDeleteButton
+                  action={deleteEquipo.bind(null, equipment.id, equipment.airport_iata)}
+                  confirmMessage={
+                    model.type === "ILS"
+                      ? `¿Eliminar este ILS y su DME asociado? Solo se puede si no tienen historial de mantenimiento, tickets ni comisiones.`
+                      : `¿Eliminar este equipo? Solo se puede si no tiene historial de mantenimiento, tickets ni comisiones.`
+                  }
+                />
+              </div>
             </div>
             <div className="grid grid-3">
               <div className="kv">
                 <span className="k">Sistema</span>
                 <span className="v">{model.type}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Instalado</span>
-                <span className="v mono">{fmtDate(equipment.installed_at)}</span>
               </div>
               <div className="kv">
                 <span className="k">Aeropuerto</span>

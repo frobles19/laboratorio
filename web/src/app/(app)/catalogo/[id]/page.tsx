@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteModelo } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,12 +40,23 @@ export default async function ModeloDetallePage({ params }: { params: Promise<{ 
       </Link>
 
       <div className="card" style={{ marginBottom: 18 }}>
-        <div className="card-title">
-          {model.brand} {model.model}{" "}
-          <span className={`pill ${TYPE_PILL[model.type] ?? "neutral"}`}>
-            <span className="dot"></span>
-            {model.type}
-          </span>
+        <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div className="card-title">
+            {model.brand} {model.model}{" "}
+            <span className={`pill ${TYPE_PILL[model.type] ?? "neutral"}`}>
+              <span className="dot"></span>
+              {model.type}
+            </span>
+          </div>
+          <div className="btn-row">
+            <Link href={`/catalogo/${model.id}/editar`} className="btn small ghost">
+              Editar
+            </Link>
+            <ConfirmDeleteButton
+              action={deleteModelo.bind(null, model.id)}
+              confirmMessage={`¿Eliminar el modelo ${model.brand} ${model.model}? Solo se puede si no tiene equipos instalados.`}
+            />
+          </div>
         </div>
         <div className="grid grid-3">
           <div className="kv">

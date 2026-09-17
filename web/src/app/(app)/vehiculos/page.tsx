@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteVehiculo } from "./[id]/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +47,7 @@ export default async function VehiculosPage() {
                 <th>Modelo</th>
                 <th>En uso</th>
                 <th>Comisión actual</th>
+                <th></th>
               </tr>
               {(vehicles ?? []).map((v) => {
                 const commission = commissionByVehicle.get(v.id);
@@ -72,12 +75,23 @@ export default async function VehiculosPage() {
                         "—"
                       )}
                     </td>
+                    <td>
+                      <div className="btn-row">
+                        <Link href={`/vehiculos/${v.id}/editar`} className="btn small ghost">
+                          Editar
+                        </Link>
+                        <ConfirmDeleteButton
+                          action={deleteVehiculo.bind(null, v.id)}
+                          confirmMessage={`¿Eliminar el vehículo ${v.license_plate}?`}
+                        />
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
               {(!vehicles || vehicles.length === 0) && (
                 <tr>
-                  <td colSpan={4} className="empty">
+                  <td colSpan={5} className="empty">
                     No hay vehículos cargados todavía.
                   </td>
                 </tr>

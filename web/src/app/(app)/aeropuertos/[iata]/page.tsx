@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteAeropuerto } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -45,9 +47,20 @@ export default async function AeropuertoDetallePage({
           </div>
         </div>
         <div className="card">
-          <div className="kv">
-            <span className="k">Región</span>
-            <span className="v">{airport.region}</span>
+          <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <div className="kv">
+              <span className="k">Región</span>
+              <span className="v">{airport.region}</span>
+            </div>
+            <div className="btn-row">
+              <Link href={`/aeropuertos/${airport.iata_code}/editar`} className="btn small ghost">
+                Editar
+              </Link>
+              <ConfirmDeleteButton
+                action={deleteAeropuerto.bind(null, airport.iata_code)}
+                confirmMessage={`¿Eliminar el aeropuerto ${airport.iata_code}? Solo se puede si no tiene equipos, artículos ni movimientos asociados.`}
+              />
+            </div>
           </div>
         </div>
       </div>

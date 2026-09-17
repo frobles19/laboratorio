@@ -930,6 +930,10 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_delete_equipment: {
+        Args: { p_equipment_id: string }
+        Returns: undefined
+      }
       rpc_record_maintenance: {
         Args: {
           p_commission_id: string
@@ -959,6 +963,17 @@ export type Database = {
           p_commission_id: string
           p_destination_type?: Database["public"]["Enums"]["location_type"]
           p_notes?: string
+        }
+        Returns: undefined
+      }
+      rpc_update_commission: {
+        Args: {
+          p_airport_iatas: string[]
+          p_commission_id: string
+          p_planned_arrival_date: string
+          p_planned_departure_date: string
+          p_technician_ids: string[]
+          p_vehicle_id?: string
         }
         Returns: undefined
       }

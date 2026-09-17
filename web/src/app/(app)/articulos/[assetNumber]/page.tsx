@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteArticulo } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -88,12 +90,23 @@ export default async function ArticuloDetallePage({
       </Link>
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-title">
-          {article.asset_number}{" "}
-          <span className={`pill ${status.cls}`}>
-            <span className="dot"></span>
-            {status.label}
-          </span>
+        <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div className="card-title">
+            {article.asset_number}{" "}
+            <span className={`pill ${status.cls}`}>
+              <span className="dot"></span>
+              {status.label}
+            </span>
+          </div>
+          <div className="btn-row">
+            <Link href={`/articulos/${article.asset_number}/editar`} className="btn small ghost">
+              Editar
+            </Link>
+            <ConfirmDeleteButton
+              action={deleteArticulo.bind(null, article.asset_number)}
+              confirmMessage={`¿Eliminar el artículo ${article.asset_number}? Solo se puede si no tiene movimientos ni historial asociado.`}
+            />
+          </div>
         </div>
         <div className="grid grid-3">
           <div className="kv">

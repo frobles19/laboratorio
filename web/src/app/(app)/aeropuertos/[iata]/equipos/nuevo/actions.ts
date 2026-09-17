@@ -13,7 +13,6 @@ export async function createEquipo(_prevState: CreateEquipoState, formData: Form
   const dmeAerialFrequency = formData.get("dme_aerial_verification_frequency_months")
     ? Number(formData.get("dme_aerial_verification_frequency_months"))
     : undefined;
-  const installedAt = String(formData.get("installed_at") ?? "").trim() || undefined;
 
   if (!airportIata || !catalogModelId || !aerialFrequency) {
     return { error: "Elegí el sistema principal y su frecuencia de verificación aérea." };
@@ -26,7 +25,6 @@ export async function createEquipo(_prevState: CreateEquipoState, formData: Form
     p_aerial_verification_frequency_months: aerialFrequency,
     p_dme_catalog_model_id: dmeCatalogModelId,
     p_dme_aerial_verification_frequency_months: dmeAerialFrequency,
-    p_installed_at: installedAt,
   });
 
   if (error) {

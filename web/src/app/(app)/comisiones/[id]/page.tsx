@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { deleteComision } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -80,11 +82,24 @@ export default async function ComisionDetallePage({ params }: { params: Promise<
 
       <div className="grid grid-2" style={{ marginBottom: 14, alignItems: "start" }}>
         <div className="card">
-          <div className="card-title">
-            {commission.id.slice(0, 8)}{" "}
-            <span className={`pill-status-strong ${STATUS_PILL[commission.status]}`}>
-              {STATUS_LABEL[commission.status]}
-            </span>
+          <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div className="card-title">
+              {commission.id.slice(0, 8)}{" "}
+              <span className={`pill-status-strong ${STATUS_PILL[commission.status]}`}>
+                {STATUS_LABEL[commission.status]}
+              </span>
+            </div>
+            {commission.status === "planificada" && (
+              <div className="btn-row">
+                <Link href={`/comisiones/${commission.id}/editar`} className="btn small ghost">
+                  Editar
+                </Link>
+                <ConfirmDeleteButton
+                  action={deleteComision.bind(null, commission.id)}
+                  confirmMessage="¿Eliminar esta comisión? Solo se puede si todavía no tiene movimientos, mantenimientos ni tickets asociados."
+                />
+              </div>
+            )}
           </div>
           <div className="grid grid-3">
             <div className="kv">

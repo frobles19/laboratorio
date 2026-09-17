@@ -111,11 +111,6 @@ export function EquipoForm({
         </>
       )}
 
-      <div className="field" style={{ maxWidth: "none", marginBottom: 0 }}>
-        <label htmlFor="installed_at">Fecha de instalación</label>
-        <input id="installed_at" name="installed_at" type="date" />
-      </div>
-
       <p style={{ color: "var(--text-faint)", fontSize: 12, maxWidth: 520, marginTop: 12 }}>
         Al guardar se crean los equipos instalados vinculados, cada uno con sus dos transmisores TX1/TX2 en estado
         &quot;fuera de servicio&quot; hasta la primera puesta en marcha.
