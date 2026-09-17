@@ -897,6 +897,31 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_create_article: {
+        Args: {
+          p_asset_number: string
+          p_calibration_due_date?: string
+          p_catalog_model_id?: string
+          p_kind: Database["public"]["Enums"]["article_kind"]
+          p_location_airport?: string
+          p_location_type: Database["public"]["Enums"]["location_type"]
+          p_model_name: string
+          p_physical_status?: Database["public"]["Enums"]["article_physical_status"]
+          p_serial_number: string
+          p_spare_type?: string
+          p_tool_type?: string
+        }
+        Returns: undefined
+      }
+      rpc_create_equipment: {
+        Args: {
+          p_airport_iata: string
+          p_catalog_model_id: string
+          p_dme_catalog_model_id?: string
+          p_installed_at?: string
+        }
+        Returns: Json
+      }
       rpc_record_maintenance: {
         Args: {
           p_commission_id: string
